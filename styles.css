@@ -968,3 +968,158 @@ body {
         left: 21px;
     }
 }
+
+/* Complete Journey Section */
+.complete-journey {
+    padding: 100px 0;
+    background: #f8f9fa;
+}
+
+.section-subtitle {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 3rem;
+    font-style: italic;
+}
+
+.journey-timeline {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.journey-item {
+    background: white;
+    margin-bottom: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.journey-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.journey-date {
+    background: linear-gradient(135deg, #0077b5 0%, #005885 100%);
+    color: white;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.journey-content {
+    padding: 2rem;
+}
+
+.journey-content h3 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1.4rem;
+}
+
+.journey-content h4 {
+    color: #0077b5;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.journey-highlights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.highlight-metric {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 4px solid #0077b5;
+}
+
+.metric-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0077b5;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.2rem;
+}
+
+.journey-description p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.journey-description ul {
+    color: #666;
+    padding-left: 1.5rem;
+}
+
+.journey-description li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.career-summary {
+    background: white;
+    padding: 3rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.career-summary h3 {
+    color: #2c3e50;
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0077b5;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Responsive adjustments for Complete Journey */
+@media (max-width: 768px) {
+    .journey-highlights {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .journey-content {
+        padding: 1.5rem;
+    }
+}
