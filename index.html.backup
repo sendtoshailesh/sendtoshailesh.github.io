@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Shailesh K. Mishra - Lead Solutions Architect at Amazon with 22+ years experience in cloud architecture, AI/ML, and data engineering. AWS All-Star, LinkedIn Top Voice.">
+    <meta name="keywords"
+        content="AWS, Solutions Architect, Cloud Architecture, AI, ML, GenAI, Data Engineering, Amazon, Google Cloud, Database Migration">
+    <meta name="author" content="Shailesh K. Mishra">
+    <title>Shailesh K. Mishra - Lead Solutions Architect | AWS Expert | Data & AI Specialist</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="#home">Shailesh</a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#home" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#experience" class="nav-link">Experience</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#projects" class="nav-link">Projects</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </li>
+            </ul>
+            <div class="nav-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Hi, I'm <span class="highlight">Shailesh K. Mishra</span></h1>
+                <p class="hero-subtitle">Lead Solutions Architect | Data & AI Specialist | AWS Expert</p>
+                <p class="hero-description">
+                    22+ years of experience in enterprise technology consulting, cloud architecture, and AI/ML
+                    solutions.
+                    Currently heading Solutions Architects team at Amazon, driving digital transformation for Fortune
+                    500 clients.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#projects" class="btn btn-primary">View My Work</a>
+                    <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+                </div>
+                <div class="social-links">
+                    <a href="https://github.com/sendtoshailesh" target="_blank" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="mailto:sendtoshailesh@gmail.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>
+                        I'm a seasoned technology leader with over 22 years of experience in enterprise technology
+                        consulting,
+                        cloud architecture, and AI/ML solutions. Currently serving as Lead Solutions Architect at
+                        Amazon,
+                        I head the Solutions Architects team for India, delivering strategic solutions with full
+                        ownership
+                        of talent management and performance development.
+                    </p>
+                    <p>
+                        My expertise spans across major cloud platforms (AWS, GCP, Oracle Cloud) with specialization in
+                        Data Engineering, AI/GenAI, and large-scale migrations. I've led transformative projects
+                        including
+                        Amazon's "Rolling Stone" migration (75PB data, 7,500 databases) and pioneered GenAI integration
+                        programs that reduced SDLC timelines by 92%.
+                    </p>
+                    <p>
+                        I'm passionate about fostering CxO relationships, mentoring high-performing teams, and driving
+                        cloud adoption. As a LinkedIn Top Data Architecture Voice and AWS All-Star Solution Architect,
+                        I regularly contribute to technical conferences and author official AWS and Google Cloud blogs.
+                    </p>
+                </div>
+                <div class="skills">
+                    <h3>Core Competencies</h3>
+                    <div class="skills-grid">
+                        <span class="skill-tag">AWS</span>
+                        <span class="skill-tag">Google Cloud</span>
+                        <span class="skill-tag">AI/ML & GenAI</span>
+                        <span class="skill-tag">Data Architecture</span>
+                        <span class="skill-tag">PostgreSQL</span>
+                        <span class="skill-tag">Oracle</span>
+                        <span class="skill-tag">Python</span>
+                        <span class="skill-tag">Solution Architecture</span>
+                        <span class="skill-tag">Database Migration</span>
+                        <span class="skill-tag">Team Leadership</span>
+                        <span class="skill-tag">CxO Engagement</span>
+                        <span class="skill-tag">Technical Writing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="experience" class="experience">
+        <div class="container">
+            <h2 class="section-title">Professional Experience</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-date">Nov 2022 - Present</div>
+                    <div class="timeline-content">
+                        <h3>Lead Solutions Architecture</h3>
+                        <h4>Amazon Web Services (AWS)</h4>
+                        <p>Heading Solutions Architects team for India, driving AI/GenAI initiatives from ideation to
+                            production. Architecting cloud solutions that improve security and operational excellence,
+                            reducing infrastructure costs by 40-60%.</p>
+                        <ul>
+                            <li>Leading strategic workforce planning and capability development</li>
+                            <li>Fostering C-level relationships and serving as technical advisor</li>
+                            <li>Boosted customer cloud adoption 40-50% via tailored implementations</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">Sep 2021 - Nov 2022</div>
+                    <div class="timeline-content">
+                        <h3>Data Management Specialist</h3>
+                        <h4>Google Cloud Platform</h4>
+                        <p>Data Management project specialist for prime Google cloud customers in India. Drove 30-40%
+                            increase in GCP migration rates by effectively addressing technical challenges.</p>
+                        <ul>
+                            <li>Implemented database solutions improving performance by 40-50%</li>
+                            <li>Led development of industry-specific POCs</li>
+                            <li>Mentored junior data specialists on GCP technologies</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">May 2019 - Sep 2021</div>
+                    <div class="timeline-content">
+                        <h3>Enterprise Solution Architect</h3>
+                        <h4>Amazon Web Services (AWS)</h4>
+                        <p>Architected cloud solutions that reduced infrastructure costs by 40-60% and improved
+                            reliability to 99.99%. Spearheaded CxO engagements and technical enablement programs.</p>
+                        <ul>
+                            <li>Secured new business revenue through targeted technical engagements</li>
+                            <li>Developed best-practice knowledge within SA community</li>
+                            <li>Specialized in full-stack modernization and AI/ML integration</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-date">Feb 2016 - May 2019</div>
+                    <div class="timeline-content">
+                        <h3>Data Manager</h3>
+                        <h4>Amazon</h4>
+                        <p>Led migration of 2400+ Oracle databases to PostgreSQL, boosting scalability by 60%.
+                            Maintained 99.9% system uptime during peak events like Cyber Monday and Prime Day.</p>
+                        <ul>
+                            <li>Implemented automation solutions increasing efficiency by 40%</li>
+                            <li>Coordinated cross-functional teams for Fortune 500 migrations</li>
+                            <li>Mentored global team of DB engineers and SDEs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="projects"></section>
+    <div class="container">
+        <h2 class="section-title">Featured Projects & Achievements</h2>
+        <div class="projects-grid">
+            <div class="project-card">
+                <div class="project-image">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="project-content">
+                    <h3>AI-DLC Unicorn Gym</h3>
+                    <p>Led AWS's initiative to revolutionize SDLC through AI integration, achieving a 92% reduction in
+                        project timelines and training 500+ professionals in GenAI methodologies.</p>
+                    <div class="project-links">
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-award"></i> AWS Initiative
+                        </a>
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-users"></i> 500+ Trained
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="project-content">
+                    <h3>Rolling Stone Migration</h3>
+                    <p>Led Amazon's e-commerce tech stack migration from Oracle to AWS NoSQL, managing 75 petabytes of
+                        data and 7,500 databases with zero downtime and 60% cost reduction.</p>
+                    <div class="project-links">
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-chart-line"></i> 75PB Data
+                        </a>
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-server"></i> 7,500 DBs
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="project-content">
+                    <h3>GenAI Chat Advisory</h3>
+                    <p>Designed and implemented GenAI-powered chat advisory application for Asset Management Companies,
+                        reducing query response time by 75% and generating ₹500Cr+ additional AUM.</p>
+                    <div class="project-links">
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-tachometer-alt"></i> 75% Faster
+                        </a>
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-rupee-sign"></i> ₹500Cr+ AUM
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image">
+                    <i class="fas fa-chart-area"></i>
+                </div>
+                <div class="project-content">
+                    <h3>IPO Listing Platform</h3>
+                    <p>Designed and deployed rapid-scale serverless infrastructure for IPO listings, handling 100,000+
+                        concurrent users with 99.999% uptime during high-traffic events.</p>
+                    <div class="project-links">
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-users"></i> 100K+ Users
+                        </a>
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-check-circle"></i> 99.999% Uptime
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="project-content">
+                    <h3>FSI Air-Gapped Solutions</h3>
+                    <p>Architected air-gap solution for Indian Financial Services Industry to meet regulatory
+                        requirements and enhance security against ransomware threats.</p>
+                    <div class="project-links">
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-lock"></i> Security First
+                        </a>
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-building"></i> FSI Compliant
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="project-card">
+                <div class="project-image">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div class="project-content">
+                    <h3>Production Support GenAI</h3>
+                    <p>Developed GenAI chatbot solution to automate routine support tasks, reducing response time by 93%
+                        and increasing team efficiency by 40%.</p>
+                    <div class="project-links">
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-clock"></i> 93% Faster
+                        </a>
+                        <a href="#" target="_blank" class="project-link">
+                            <i class="fas fa-arrow-up"></i> 40% Efficiency
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-content">
+                <p>I'm always interested in strategic technology discussions, cloud architecture consultations, and
+                    AI/ML collaborations. Let's connect!</p>
+                <div class="contact-links">
+                    <a href="mailto:sendtoshailesh@gmail.com" class="contact-link">
+                        <i class="fas fa-envelope"></i>
+                        <span>sendtoshailesh@gmail.com</span>
+                    </a>
+                    <a href="https://github.com/sendtoshailesh" target="_blank" class="contact-link">
+                        <i class="fab fa-github"></i>
+                        <span>GitHub</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="contact-link">
+                        <i class="fab fa-linkedin"></i>
+                        <span>LinkedIn Profile</span>
+                    </a>
+                    <a href="tel:+919591466222" class="contact-link">
+                        <i class="fas fa-phone"></i>
+                        <span>+91 9591466222</span>
+                    </a>
+                </div>
+                <div style="margin-top: 2rem; text-align: center;">
+                    <p style="font-size: 1.1rem; opacity: 0.9;">
+                        🏆 LinkedIn Top Data Architecture Voice | AWS All-Star Solution Architect | Google Dev Library
+                        Contributor
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Shailesh K. Mishra. Built with ❤️ and hosted on GitHub Pages.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">
+                Lead Solutions Architect @ Amazon | 22+ Years in Enterprise Technology
+            </p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
