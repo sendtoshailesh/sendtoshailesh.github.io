@@ -83,10 +83,38 @@ body {
     min-height: 100vh;
     display: flex;
     align-items: center;
-    background: linear-gradient(135deg, #0077b5 0%, #005885 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 15s ease infinite;
     color: white;
     text-align: center;
     padding-top: 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.05" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom center;
+    background-size: cover;
+    pointer-events: none;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .hero-container {
@@ -139,28 +167,52 @@ body {
     font-weight: 600;
     transition: all 0.3s ease;
     display: inline-block;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
 }
 
 .btn-primary {
     background: #ffd700;
     color: #333;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
 }
 
 .btn-primary:hover {
     background: #ffed4e;
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
 }
 
 .btn-secondary {
     background: transparent;
     color: white;
     border: 2px solid white;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
 }
 
 .btn-secondary:hover {
     background: white;
-    color: #333;
+    color: #667eea;
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
 }
 
 .social-links {
@@ -915,6 +967,19 @@ body {
         grid-template-columns: 1fr;
     }
 
+    .education-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .education-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .education-icon {
+        font-size: 3rem;
+    }
+
     .skills-grid {
         grid-template-columns: 1fr;
     }
@@ -982,6 +1047,98 @@ body {
     margin-bottom: 3rem;
     font-style: italic;
 }
+
+/* Education Section */
+.education {
+    padding: 100px 0;
+    background: white;
+}
+
+.education-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.education-item {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 15px;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    border-left: 4px solid #0077b5;
+}
+
+.education-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    background: white;
+}
+
+.education-item.featured {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-left: 4px solid #ffd700;
+}
+
+.education-item.featured:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.education-item.featured h3,
+.education-item.featured h4,
+.education-item.featured p {
+    color: white;
+}
+
+.education-icon {
+    font-size: 2.5rem;
+    color: #0077b5;
+    min-width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.education-item.featured .education-icon {
+    color: #ffd700;
+}
+
+.education-content h3 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+}
+
+.education-content h4 {
+    color: #0077b5;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.education-period {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+    font-weight: 500;
+}
+
+.education-field {
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.education-item.featured .education-period,
+.education-item.featured .education-field {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Journey Timeline */
 
 .journey-timeline {
     max-width: 1000px;
