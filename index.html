@@ -1,1010 +1,609 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Shailesh Mishra - Lead Solutions Architect at Amazon with 22+ years experience in cloud architecture, AI/ML, and data engineering. AWS All-Star, LinkedIn Top Voice.">
-    <meta name="keywords"
-        content="AWS, Solutions Architect, Cloud Architecture, AI, ML, GenAI, Data Engineering, Amazon, Google Cloud, Database Migration">
-    <meta name="author" content="Shailesh Mishra">
-    <title>Shailesh Mishra - Lead Solutions Architect | AWS Expert | Data & AI Specialist</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shailesh Mishra — Personal Hub</title>
+<meta name="description" content="Personal hub for Shailesh Mishra — Chief Dev Advisor at Microsoft. Quick access to projects, bookmarks, tools, and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ─────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --max-w: 1200px;
+}
+
+[data-theme="dark"] {
+  --bg-page: #0a0a0f;
+  --bg-card: #141419;
+  --bg-card-hover: #1a1a22;
+  --bg-glass: rgba(20, 20, 25, 0.8);
+  --border: rgba(255,255,255,0.06);
+  --border-hover: rgba(255,255,255,0.12);
+  --text-0: #f0f0f5;
+  --text-1: #a0a0b0;
+  --text-2: #606070;
+  --accent: #6c63ff;
+  --accent-glow: rgba(108,99,255,0.15);
+  --accent-2: #00d4aa;
+  --accent-3: #ff6b9d;
+  --tag-bg: rgba(255,255,255,0.06);
+  --tag-text: #b0b0c0;
+  --shadow: 0 2px 20px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+  --gradient-hero: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --gradient-accent: linear-gradient(135deg, #6c63ff, #5a54e0);
+}
+
+[data-theme="light"] {
+  --bg-page: #f5f5f7;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafafa;
+  --bg-glass: rgba(255,255,255,0.9);
+  --border: rgba(0,0,0,0.06);
+  --border-hover: rgba(0,0,0,0.12);
+  --text-0: #1a1a2e;
+  --text-1: #555566;
+  --text-2: #888899;
+  --accent: #5b52e0;
+  --accent-glow: rgba(91,82,224,0.1);
+  --accent-2: #00b894;
+  --accent-3: #e84393;
+  --tag-bg: rgba(0,0,0,0.04);
+  --tag-text: #555566;
+  --shadow: 0 1px 10px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.08);
+  --gradient-hero: linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 50%, #e3f2fd 100%);
+  --gradient-accent: linear-gradient(135deg, #5b52e0, #4a42c0);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font); background: var(--bg-page); color: var(--text-0);
+  min-height: 100vh; line-height: 1.5;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── Header ────────────────────────────────────────────────────── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: var(--max-w); margin: 0 auto; padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent);
+  object-fit: cover;
+}
+.header-name { font-size: 15px; font-weight: 600; }
+.header-role { font-size: 12px; color: var(--text-2); }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.btn-icon {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: var(--tag-bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text-1); font-size: 16px; transition: all var(--transition);
+}
+.btn-icon:hover { background: var(--bg-card-hover); color: var(--text-0); border-color: var(--border-hover); }
+.clock { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* ── Hero ──────────────────────────────────────────────────────── */
+.hero {
+  max-width: var(--max-w); margin: 0 auto; padding: 40px 24px 20px;
+}
+.greeting { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+.greeting-emoji { font-size: 32px; }
+.greeting-sub { font-size: 15px; color: var(--text-1); max-width: 600px; }
+
+/* ── Bento Grid ────────────────────────────────────────────────── */
+.bento {
+  max-width: var(--max-w); margin: 0 auto; padding: 20px 24px 60px;
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: auto;
+}
+
+/* Card base */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+  transition: all var(--transition); position: relative; overflow: hidden;
+}
+.card:hover {
+  border-color: var(--border-hover); background: var(--bg-card-hover);
+  box-shadow: var(--shadow); transform: translateY(-2px);
+}
+.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.card-icon { font-size: 20px; }
+.card-title { font-size: 14px; font-weight: 600; }
+.card-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-left: auto;
+  background: var(--accent-glow); color: var(--accent); font-weight: 500;
+}
+
+/* ── Quick Links Card (span 2 cols) ────────────────────────────── */
+.card-quick { grid-column: span 2; }
+.quick-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+}
+.quick-link {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 16px 8px; border-radius: var(--radius-sm);
+  background: var(--tag-bg); border: 1px solid transparent;
+  transition: all var(--transition); cursor: pointer; text-align: center;
+}
+.quick-link:hover { border-color: var(--accent); background: var(--accent-glow); transform: translateY(-2px); }
+.quick-link-icon { font-size: 24px; }
+.quick-link-label { font-size: 11px; font-weight: 500; color: var(--text-1); }
+
+/* ── Bookmarks Card ────────────────────────────────────────────── */
+.card-bookmarks { background: linear-gradient(135deg, var(--bg-card), var(--accent-glow)); }
+.bookmarks-count { font-size: 36px; font-weight: 800; color: var(--accent); line-height: 1; }
+.bookmarks-label { font-size: 13px; color: var(--text-1); margin-top: 4px; }
+.bookmarks-cta {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 16px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  background: var(--gradient-accent); color: white; font-size: 13px; font-weight: 500;
+  transition: all var(--transition);
+}
+.bookmarks-cta:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(108,99,255,0.3); }
+
+/* ── Projects Card ─────────────────────────────────────────────── */
+.card-projects { grid-column: span 2; }
+.project-list { display: flex; flex-direction: column; gap: 8px; }
+.project-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--tag-bg); transition: all var(--transition); cursor: pointer;
+}
+.project-item:hover { background: var(--accent-glow); }
+.project-emoji { font-size: 18px; flex-shrink: 0; }
+.project-info { flex: 1; min-width: 0; }
+.project-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-desc { font-size: 11px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-stars { font-size: 11px; color: var(--text-2); flex-shrink: 0; }
+
+/* ── Blog Card ─────────────────────────────────────────────────── */
+.blog-list { display: flex; flex-direction: column; gap: 8px; }
+.blog-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--tag-bg); transition: all var(--transition); cursor: pointer;
+}
+.blog-item:hover { background: var(--accent-glow); }
+.blog-icon { font-size: 16px; flex-shrink: 0; }
+.blog-label { font-size: 13px; font-weight: 500; flex: 1; }
+.blog-tag { font-size: 10px; color: var(--text-2); padding: 2px 8px; background: var(--bg-card); border-radius: 10px; }
+
+/* ── Tools Card ────────────────────────────────────────────────── */
+.tools-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+.tool-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px; border-radius: var(--radius-sm);
+  background: var(--tag-bg); transition: all var(--transition); cursor: pointer;
+  text-align: center;
+}
+.tool-item:hover { background: var(--accent-glow); transform: translateY(-2px); }
+.tool-icon { font-size: 22px; }
+.tool-label { font-size: 10px; color: var(--text-1); font-weight: 500; }
+
+/* ── Social Card ───────────────────────────────────────────────── */
+.social-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.social-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: var(--radius-sm);
+  background: var(--tag-bg); border: 1px solid transparent;
+  transition: all var(--transition); cursor: pointer; font-size: 13px; font-weight: 500;
+}
+.social-link:hover { border-color: var(--accent); background: var(--accent-glow); }
+.social-icon { font-size: 16px; }
+
+/* ── Skills Card ───────────────────────────────────────────────── */
+.skills-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.skill-tag {
+  padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+  background: var(--tag-bg); color: var(--tag-text); border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.skill-tag:hover { border-color: var(--accent); color: var(--accent); }
+.skill-tag.highlight { background: var(--accent-glow); color: var(--accent); border-color: rgba(108,99,255,0.2); }
+
+/* ── Learning Card ─────────────────────────────────────────────── */
+.learning-list { display: flex; flex-direction: column; gap: 8px; }
+.learning-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  background: var(--tag-bg); transition: all var(--transition); cursor: pointer;
+}
+.learning-item:hover { background: var(--accent-glow); }
+.learning-icon { font-size: 16px; }
+.learning-label { font-size: 13px; font-weight: 500; flex: 1; }
+.learning-status { font-size: 10px; padding: 2px 8px; border-radius: 10px; }
+.status-active { background: rgba(0,212,170,0.15); color: var(--accent-2); }
+.status-done { background: var(--tag-bg); color: var(--text-2); }
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.footer {
+  max-width: var(--max-w); margin: 0 auto; padding: 20px 24px 40px;
+  text-align: center; font-size: 12px; color: var(--text-2);
+  border-top: 1px solid var(--border);
+}
+
+/* ── Responsive ────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .bento { grid-template-columns: repeat(2, 1fr); }
+  .card-quick { grid-column: span 2; }
+  .card-projects { grid-column: span 2; }
+  .quick-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 600px) {
+  .bento { grid-template-columns: 1fr; }
+  .card-quick, .card-projects { grid-column: span 1; }
+  .quick-grid { grid-template-columns: repeat(2, 1fr); }
+  .tools-grid { grid-template-columns: repeat(3, 1fr); }
+  .greeting { font-size: 22px; }
+  .hero { padding: 24px 16px 12px; }
+  .bento { padding: 12px 16px 40px; }
+}
+
+/* ── Animations ────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card { animation: fadeUp 0.5s ease forwards; opacity: 0; }
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
+.card:nth-child(4) { animation-delay: 0.2s; }
+.card:nth-child(5) { animation-delay: 0.25s; }
+.card:nth-child(6) { animation-delay: 0.3s; }
+.card:nth-child(7) { animation-delay: 0.35s; }
+.card:nth-child(8) { animation-delay: 0.4s; }
+</style>
 </head>
-
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <a href="#home">Shailesh Mishra</a>
-            </div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#home" class="nav-link">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#about" class="nav-link">About</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#experience" class="nav-link">Experience</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#complete-journey" class="nav-link">Journey</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#education" class="nav-link">Education</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#skills" class="nav-link">Skills</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#certifications" class="nav-link">Certifications</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#projects" class="nav-link">Projects</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#publications" class="nav-link">Publications</a>
-                </li>
-                <li class="nav-item">
-                    <a href="#contact" class="nav-link">Contact</a>
-                </li>
-            </ul>
-            <div class="nav-toggle" id="mobile-menu">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <img class="avatar" src="https://avatars.githubusercontent.com/u/50418172?v=4" alt="Shailesh Mishra">
+      <div>
+        <div class="header-name">Shailesh Mishra</div>
+        <div class="header-role">Chief Dev Advisor · Microsoft</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="clock" id="clock"></span>
+      <button class="btn-icon" id="btnTheme" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="greeting">
+    <span class="greeting-emoji">👋</span> <span id="greetingText">Hello</span>, Shailesh
+  </div>
+  <p class="greeting-sub">Your personal command center — everything in one place.</p>
+</section>
+
+<!-- Bento Grid -->
+<main class="bento">
+
+  <!-- 1. Quick Links (2 cols) -->
+  <div class="card card-quick">
+    <div class="card-header">
+      <span class="card-icon">📌</span>
+      <span class="card-title">Quick Links</span>
+    </div>
+    <div class="quick-grid">
+      <a href="portfolio.html" class="quick-link">
+        <span class="quick-link-icon">👤</span>
+        <span class="quick-link-label">Portfolio</span>
+      </a>
+      <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="quick-link">
+        <span class="quick-link-icon">💼</span>
+        <span class="quick-link-label">LinkedIn</span>
+      </a>
+      <a href="https://github.com/sendtoshailesh" target="_blank" class="quick-link">
+        <span class="quick-link-icon">🐙</span>
+        <span class="quick-link-label">GitHub</span>
+      </a>
+      <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="quick-link">
+        <span class="quick-link-icon">✍️</span>
+        <span class="quick-link-label">Medium</span>
+      </a>
+      <a href="mailto:sendtoshailesh@gmail.com" class="quick-link">
+        <span class="quick-link-icon">📧</span>
+        <span class="quick-link-label">Email</span>
+      </a>
+      <a href="https://x.com/sendtoshailesh" target="_blank" class="quick-link">
+        <span class="quick-link-icon">🐦</span>
+        <span class="quick-link-label">X / Twitter</span>
+      </a>
+      <a href="https://sendtoshailesh.github.io/my-bookmarks/" target="_blank" class="quick-link">
+        <span class="quick-link-icon">🔖</span>
+        <span class="quick-link-label">Bookmarks</span>
+      </a>
+      <a href="https://github.com/sendtoshailesh?tab=repositories" target="_blank" class="quick-link">
+        <span class="quick-link-icon">📂</span>
+        <span class="quick-link-label">All Repos</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 2. Bookmarks -->
+  <div class="card card-bookmarks">
+    <div class="card-header">
+      <span class="card-icon">🔖</span>
+      <span class="card-title">Bookmarks</span>
+    </div>
+    <div class="bookmarks-count">1,442</div>
+    <div class="bookmarks-label">saved bookmarks from Chrome & Edge</div>
+    <a href="https://sendtoshailesh.github.io/my-bookmarks/" class="bookmarks-cta">
+      Open Bookmarks App →
+    </a>
+  </div>
+
+  <!-- 3. Projects (2 cols) -->
+  <div class="card card-projects">
+    <div class="card-header">
+      <span class="card-icon">🚀</span>
+      <span class="card-title">Featured Projects</span>
+      <a href="https://github.com/sendtoshailesh?tab=repositories" target="_blank" class="card-badge">View All →</a>
+    </div>
+    <div class="project-list" id="projectList">
+      <a href="https://github.com/sendtoshailesh/my-bookmarks" target="_blank" class="project-item">
+        <span class="project-emoji">🔖</span>
+        <div class="project-info">
+          <div class="project-name">my-bookmarks</div>
+          <div class="project-desc">Git-based bookmark manager with web UI</div>
         </div>
-    </nav>
-
-    <section id="home" class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1 class="hero-title">Hi, I'm <span class="highlight">Shailesh Mishra</span></h1>
-                <p class="hero-subtitle">Chief Dev Advisor at Microsoft Asia (AI, Data & Cloud Transformation) | ex-AWS, Google | 22+ Years in Enterprise Technology</p>
-                <p class="hero-description">
-                    I work on complex, high-impact problems at the intersection of AI, Data, and large-scale cloud transformation. Currently leading Microsoft's Global Black Belt team, providing deep technical leadership on strategic customer engagements. My work focuses on helping enterprises modernize platforms, scale AI responsibly, and translate executive intent into production-ready architectures.
-                </p>
-                <div class="hero-buttons">
-                    <a href="#experience" class="btn btn-primary">View My Experience</a>
-                    <a href="#contact" class="btn btn-secondary">Get In Touch</a>
-                </div>
-                <div class="social-links">
-                    <a href="https://github.com/sendtoshailesh" target="_blank" aria-label="GitHub">
-                        <i class="fab fa-github"></i>
-                    </a>
-                    <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" aria-label="LinkedIn">
-                        <i class="fab fa-linkedin"></i>
-                    </a>
-                    <a href="mailto:sendtoshailesh@gmail.com" aria-label="Email">
-                        <i class="fas fa-envelope"></i>
-                    </a>
-                </div>
-            </div>
+      </a>
+      <a href="https://github.com/sendtoshailesh/content-creation" target="_blank" class="project-item">
+        <span class="project-emoji">📝</span>
+        <div class="project-info">
+          <div class="project-name">content-creation</div>
+          <div class="project-desc">Workflow to create content from idea</div>
         </div>
-    </section>
-
-    <section id="about" class="about">
-        <div class="container">
-            <h2 class="section-title">Professional Summary</h2>
-            <div class="about-content">
-                <div class="summary-highlight">
-                    <h3>🚀 Technology Leadership Excellence</h3>
-                    <p>Over the past <strong>22+ years</strong>, I've worked across <strong>Microsoft, AWS, Google Cloud, Oracle, and IBM</strong>, leading enterprise migrations, modernizing large-scale data platforms, and driving cloud and AI adoption in highly regulated and mission-critical environments (BFSI, Healthcare, global enterprises).</p>
-                    <p style="margin-top: 1rem;"><strong>What defines my approach is execution over theory:</strong> Architecture that works at scale • AI systems that can survive production realities • Cloud transformations grounded in security, cost, and operational constraints.</p>
-                </div>
-                
-                <div class="key-highlights">
-                    <div class="highlight-item">
-                        <i class="fas fa-cloud"></i>
-                        <h4>Cloud Architecture Mastery</h4>
-                        <p>Demonstrated expertise in leading complex migration projects, transitioning critical systems to cloud environments while ensuring minimal disruption and maximum efficiency.</p>
-                    </div>
-                    <div class="highlight-item">
-                        <i class="fas fa-brain"></i>
-                        <h4>AI and Data Expert</h4>
-                        <p>Pioneering AI/GenAI integration and complex data migration projects, including 75PB enterprise transformations and modernization initiatives that drive operational excellence and business innovation.</p>
-                    </div>
-                    <div class="highlight-item">
-                        <i class="fas fa-users"></i>
-                        <h4>Team Leadership</h4>
-                        <p>Proven leadership in team management, project execution, and fostering innovation in cloud-based solutions across diverse industry verticals.</p>
-                    </div>
-                </div>
-            </div>
+      </a>
+      <a href="https://github.com/sendtoshailesh/my-RAG-experiments" target="_blank" class="project-item">
+        <span class="project-emoji">🤖</span>
+        <div class="project-info">
+          <div class="project-name">my-RAG-experiments</div>
+          <div class="project-desc">RAG experiments and AI prototypes</div>
         </div>
-    </section>
-
-    <section id="experience" class="experience">
-        <div class="container">
-            <h2 class="section-title">Professional Experience</h2>
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-date">December 2025 - Present</div>
-                    <div class="timeline-content">
-                        <h3>Chief Dev Advisor (Asia Region)</h3>
-                        <h4>Microsoft • Hyderabad, Telangana, India</h4>
-                        <p>Lead Specialist in Microsoft's Global Black Belt team, providing deep technical leadership on strategic customer engagements. Focus on helping enterprises modernize platforms, scale AI responsibly, and translate executive intent into production-ready architectures.</p>
-                        
-                        <div class="responsibilities">
-                            <h5>Strategic Leadership & Architecture</h5>
-                            <ul>
-                                <li>Responsible for driving end-to-end developer conversations with the C-Suite, focusing on industry trends and guiding strategic customers on AI transformations in Software Development</li>
-                                <li>Lead technical strategy and solution architecture for complex, high-impact customer engagements spanning AI, data, and cloud modernization</li>
-                                <li>Architect and land enterprise solutions across Azure, GitHub, and Microsoft AI Foundry/Copilot with strong focus on secure, scalable implementation</li>
-                                <li>Translate business goals into technical execution plans, reference architectures, and adoption roadmaps working with stakeholders from engineering teams to leadership</li>
-                                <li>Enable delivery readiness by sharing patterns, best practices, and repeatable assets that accelerate customer success</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-date">November 2022 - December 2025</div>
-                    <div class="timeline-content">
-                        <h3>Lead Solutions Architecture</h3>
-                        <h4>Amazon Web Services (AWS) • Hyderabad, Telangana, India</h4>
-                        <p>Senior Technical Leader at Amazon, heading the Solutions Architect team for Amazon Selling Partner Services (SPS) India and worked as Sr. Solutions Architect in AWS FSI industry focused team. Specialized in Enterprise Architecture, Data & AI Solutions, API Management, and Cloud Modernization.</p>
-                        
-                        <div class="responsibilities">
-                            <h5>Product Innovation & AI Excellence</h5>
-                            <ul>
-                                <li>Driving SP-API evolution through data-driven insights and strategic recommendations</li>
-                                <li>Pioneering Generative AI initiatives from LLM evaluation to production deployment</li>
-                                <li>Building AI-powered solutions (chatbots, agentic apps, MCP servers) for enhanced seller experiences</li>
-                                <li>Incorporating AI capabilities across SDLC for optimized development</li>
-                            </ul>
-                            
-                            <h5>Architecture & Solutions Leadership</h5>
-                            <ul>
-                                <li>Architecting enterprise solutions using AWS services, AI/ML platforms, and data solutions</li>
-                                <li>Leading SA team in designing cloud-native architectures with integrated AI capabilities</li>
-                                <li>Implementing GenAI solutions for global marketplace experiences</li>
-                                <li>Developing AI applications for internal teams and external developer communities</li>
-                            </ul>
-                            
-                            <h5>Strategic Leadership</h5>
-                            <ul>
-                                <li>Providing executive consultation on API adoption and AI integration</li>
-                                <li>Leading technical validations and AI enablement workshops</li>
-                                <li>Creating technical content and delivering keynotes on API/AI strategies</li>
-                                <li>Driving community engagement through developer enablement programs</li>
-                                <li>Hiring and developing world most customer centric Solution Architect team</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-date">September 2021 - November 2022</div>
-                    <div class="timeline-content">
-                        <h3>Customer Engineer (Data Specialist)</h3>
-                        <h4>Google • Hyderabad, Telangana, India</h4>
-                        <p>Delivered expert consultation on Google Cloud Platform (GCP) database solutions, including Cloud SQL, Cloud Spanner, and BigQuery, implementing robust data management strategies to optimize performance and scalability for enterprise clients.</p>
-                        
-                        <div class="responsibilities">
-                            <ul>
-                                <li>Designed and executed comprehensive proof of concept (POC) demonstrations, showcasing GCP's capabilities in data analytics, machine learning, and cloud infrastructure across diverse industry verticals</li>
-                                <li>Partnered closely with cross-functional sales teams to address technical challenges, mitigate client concerns, and accelerate cloud adoption rates</li>
-                                <li>Achieved significant increase in successful GCP migrations through strategic technical engagements</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-date">May 2019 - September 2021</div>
-                    <div class="timeline-content">
-                        <h3>Enterprise Solutions Architect</h3>
-                        <h4>Amazon Web Services (AWS) • Hyderabad Area, India</h4>
-                        <p>Served as Enterprise Solutions Architect within the AWS Business Development Team, functioning as the technical cornerstone in a customer-facing capacity. Provided comprehensive support across all Commercial sector segments, driving cloud adoption and digital transformation initiatives.</p>
-                        
-                        <div class="responsibilities">
-                            <ul>
-                                <li>Acted as pivotal technical member of Business Development team, ensuring customer success in architecting, deploying, and optimizing applications on AWS platform</li>
-                                <li>Conducted thorough scope analysis for each customer engagement, establishing clear, measurable objectives using AWS Well-Architected Framework</li>
-                                <li>Spearheaded technical engagements, orchestrating timely and successful value delivery with AWS partners</li>
-                                <li>Developed and disseminated best-practice knowledge within Solutions Architect community</li>
-                                <li>Demonstrated comprehensive understanding of diverse market segments and industry verticals</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-date">February 2016 - May 2019</div>
-                    <div class="timeline-content">
-                        <h3>Data Manager, Amazon</h3>
-                        <h4>Amazon • Hyderabad Area, India</h4>
-                        <p>Led technical initiatives and spearheaded team capability development, overseeing end-to-end aspects of multiple large-scale, complex applications while efficiently managing escalations.</p>
-                        
-                        <div class="responsibilities">
-                            <ul>
-                                <li>Provided strategic mentorship and guidance to team members through regular coaching sessions, structured goal-setting, and comprehensive performance evaluations</li>
-                                <li>Orchestrated all facets of employee lifecycle, including recruitment, onboarding, training, recognition programs, performance management, and retention strategies</li>
-                                <li>Drove end-to-end delivery of product portfolios, cultivating robust stakeholder relationships and executing strategic initiatives</li>
-                                <li>Implemented Agile Scrum methodology to enhance project efficiency while championing engineering and operational excellence</li>
-                                <li>Spearheaded large-scale database migration initiative, successfully transitioning 2400+ Oracle databases to PostgreSQL using AWS DMS</li>
-                                <li>Served as performance tuning expert for application teams, conducting in-depth analysis of performance metrics</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      </a>
+      <a href="https://github.com/sendtoshailesh/postgres-data-masking-anonymization" target="_blank" class="project-item">
+        <span class="project-emoji">🔒</span>
+        <div class="project-info">
+          <div class="project-name">postgres-data-masking</div>
+          <div class="project-desc">Data masking & anonymization in PostgreSQL</div>
         </div>
-    </section>
-
-    <section id="complete-journey" class="complete-journey">
-        <div class="container">
-            <h2 class="section-title">Complete Professional Journey</h2>
-            <p class="section-subtitle">22+ Years of Technology Leadership & Database Excellence</p>
-            
-            <div class="journey-timeline">
-                <!-- Oracle Principal Consultant -->
-                <div class="journey-item">
-                    <div class="journey-date">June 2014 - January 2016</div>
-                    <div class="journey-content">
-                        <h3>Principal Consultant, Managed Cloud</h3>
-                        <h4>Oracle, Bangalore</h4>
-                        <div class="journey-highlights">
-                            <div class="highlight-metric">
-                                <span class="metric-number">30%</span>
-                                <span class="metric-label">Query Performance Improvement</span>
-                            </div>
-                            <div class="highlight-metric">
-                                <span class="metric-number">45%</span>
-                                <span class="metric-label">Reduced Manual Intervention</span>
-                            </div>
-                            <div class="highlight-metric">
-                                <span class="metric-number">99.8%</span>
-                                <span class="metric-label">System Uptime</span>
-                            </div>
-                        </div>
-                        <div class="journey-description">
-                            <p>Served as Technical Lead and Solutions Architect for worldwide customers, providing expert post-sales support for Oracle Engineered Systems.</p>
-                            <ul>
-                                <li>Optimized Oracle Exadata and Exalogic systems' database performance, achieving 30% improvement in query response times</li>
-                                <li>Developed and implemented automation solutions, reducing manual intervention by 45%</li>
-                                <li>Maintained exemplary 99.8% system uptime for critical Oracle systems</li>
-                                <li>Delivered mission-critical production support for Oracle Exadata and Exalogic Engineered Systems</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TCS Technical Consultant -->
-                <div class="journey-item">
-                    <div class="journey-date">January 2014 - June 2014</div>
-                    <div class="journey-content">
-                        <h3>Technical Consultant</h3>
-                        <h4>Tata Consultancy Services (TCS), Bangalore</h4>
-                        <div class="journey-description">
-                            <p>Database Architect delivering comprehensive database and schema design while supporting application development teams.</p>
-                            <ul>
-                                <li>Led global DBA operations, orchestrating seamless coordination with customers and cross-functional teams</li>
-                                <li>Delivered expert Oracle Database production support with 24/7 on-call DBA responsibilities</li>
-                                <li>Managed full database lifecycle: installation, upgrades, cloning, and capacity planning</li>
-                                <li>Optimized physical and logical database designs, implemented critical patches and monitoring protocols</li>
-                                <li>Spearheaded disaster recovery solutions for Production, Development, and Test environments</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- IBM Technical Services Team Leader -->
-                <div class="journey-item">
-                    <div class="journey-date">January 2011 - January 2014</div>
-                    <div class="journey-content">
-                        <h3>Technical Services Team Leader - Databases</h3>
-                        <h4>IBM, Bangalore</h4>
-                        <div class="journey-highlights">
-                            <div class="highlight-metric">
-                                <span class="metric-number">30-40%</span>
-                                <span class="metric-label">Operational Overhead Reduction</span>
-                            </div>
-                            <div class="highlight-metric">
-                                <span class="metric-number">L3/L4</span>
-                                <span class="metric-label">Global Technical Support</span>
-                            </div>
-                        </div>
-                        <div class="journey-description">
-                            <p>Technical Lead and Subject Matter Expert for Global Technology Services (GTS) supporting worldwide customers across BFSI domains.</p>
-                            <ul>
-                                <li>🛠️ Headed Level 3 and 4 technical support for global clients</li>
-                                <li>🤖 Designed automation solutions, cutting operational overhead by 30-40%</li>
-                                <li>📚 Developed curriculum and training materials for database professionals</li>
-                                <li>Served on technical panels for Database Administrator (DBA) recruitment</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mphasis Senior Consultant DBA -->
-                <div class="journey-item">
-                    <div class="journey-date">October 2009 - January 2011</div>
-                    <div class="journey-content">
-                        <h3>Senior Consultant DBA</h3>
-                        <h4>Mphasis, Bangalore</h4>
-                        <div class="journey-highlights">
-                            <div class="highlight-metric">
-                                <span class="metric-number">24/7</span>
-                                <span class="metric-label">Production Support</span>
-                            </div>
-                            <div class="highlight-metric">
-                                <span class="metric-number">Oracle</span>
-                                <span class="metric-label">Database Expertise</span>
-                            </div>
-                        </div>
-                        <div class="journey-description">
-                            <p>Delivered expert database management and optimization services, implementing best practices to enhance system performance.</p>
-                            <ul>
-                                <li>💾 Delivered expert database management and optimization services</li>
-                                <li>📊 Implemented best practices, enhancing system performance and reliability</li>
-                                <li>Delivered expert-level Oracle Database production support with on-call DBA responsibilities</li>
-                                <li>Developed and maintained comprehensive suite of SQL scripts and complex queries</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Oracle India Senior Education Consultant -->
-                <div class="journey-item">
-                    <div class="journey-date">May 2007 - October 2009</div>
-                    <div class="journey-content">
-                        <h3>Senior Education Consultant</h3>
-                        <h4>Oracle India Pvt Ltd, Bangalore</h4>
-                        <div class="journey-highlights">
-                            <div class="highlight-metric">
-                                <span class="metric-number">Oracle</span>
-                                <span class="metric-label">University Training</span>
-                            </div>
-                            <div class="highlight-metric">
-                                <span class="metric-number">APEX</span>
-                                <span class="metric-label">Development</span>
-                            </div>
-                        </div>
-                        <div class="journey-description">
-                            <p>Senior Education Consultant for Oracle University, delivering high-impact consultancy and educational services.</p>
-                            <ul>
-                                <li>🎓 Conducted advanced technical training programs on Oracle technologies</li>
-                                <li>📚 Developed curriculum and training materials for database professionals</li>
-                                <li>Designed curricula aligned with Oracle Global Customer Support requirements</li>
-                                <li>Architected and implemented sophisticated application database code objects using Oracle APEX</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Yash Papers DBA -->
-                <div class="journey-item">
-                    <div class="journey-date">July 2006 - May 2007</div>
-                    <div class="journey-content">
-                        <h3>Database Administrator</h3>
-                        <h4>Yash Papers LTD, Faizabad</h4>
-                        <div class="journey-highlights">
-                            <div class="highlight-metric">
-                                <span class="metric-number">RAMCO</span>
-                                <span class="metric-label">ERP Implementation</span>
-                            </div>
-                            <div class="highlight-metric">
-                                <span class="metric-number">RMAN</span>
-                                <span class="metric-label">Backup & Recovery</span>
-                            </div>
-                        </div>
-                        <div class="journey-description">
-                            <p>Managed and optimized database systems to support business operations, implementing comprehensive data strategies.</p>
-                            <ul>
-                                <li>🗄️ Managed and optimized database systems to support business operations</li>
-                                <li>🔒 Implemented data backup and recovery strategies, ensuring business continuity</li>
-                                <li>Spearheaded installation, configuration, and maintenance of RAMCO ERP system</li>
-                                <li>Designed and executed comprehensive backup and recovery strategies using Oracle RMAN</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- UPTEC Senior System Officer -->
-                <div class="journey-item">
-                    <div class="journey-date">April 2001 - July 2006</div>
-                    <div class="journey-content">
-                        <h3>Senior System Officer</h3>
-                        <h4>UPTEC Computer Consultancy Ltd, Varanasi</h4>
-                        <div class="journey-highlights">
-                            <div class="highlight-metric">
-                                <span class="metric-number">5+</span>
-                                <span class="metric-label">Years Experience</span>
-                            </div>
-                            <div class="highlight-metric">
-                                <span class="metric-number">Oracle9i</span>
-                                <span class="metric-label">Database Server</span>
-                            </div>
-                        </div>
-                        <div class="journey-description">
-                            <p>Started database career, developing SQL/PL-SQL scripting skills and database administration expertise.</p>
-                            <ul>
-                                <li>Developed and optimized SQL and PL-SQL scripts for various database projects</li>
-                                <li>Installed and maintained Oracle9i Database Server ensuring optimal performance</li>
-                                <li>Conducted database cloning to support testing and development environments</li>
-                                <li>Managed regular backups and implemented recovery procedures</li>
-                                <li>Utilized multiple programming languages: VB 6.0, C, C++, Java 2.0</li>
-                                <li>Performed SQL code tuning to improve performance and efficiency</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Career Summary Stats -->
-            <div class="career-summary">
-                <h3>Career Impact Summary</h3>
-                <div class="summary-stats">
-                    <div class="stat-item">
-                        <span class="stat-number">22+</span>
-                        <span class="stat-label">Years Experience</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">7</span>
-                        <span class="stat-label">Major Companies</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">75PB</span>
-                        <span class="stat-label">Data Migrated</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">500+</span>
-                        <span class="stat-label">Professionals Trained</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">99.9%</span>
-                        <span class="stat-label">Peak Uptime Achieved</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">₹500Cr+</span>
-                        <span class="stat-label">Business Value Generated</span>
-                    </div>
-                </div>
-            </div>
+      </a>
+      <a href="https://github.com/sendtoshailesh/ai-sdlc-pro" target="_blank" class="project-item">
+        <span class="project-emoji">⚡</span>
+        <div class="project-info">
+          <div class="project-name">ai-sdlc-pro</div>
+          <div class="project-desc">AI-powered SDLC automation</div>
         </div>
-    </section>
+      </a>
+    </div>
+  </div>
 
-    <section id="education" class="education">
-        <div class="container">
-            <h2 class="section-title">Education & Continuous Learning</h2>
-            <div class="education-grid">
-                <div class="education-item featured">
-                    <div class="education-icon">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <div class="education-content">
-                        <h3>Executive Programme for Tech Product Management</h3>
-                        <h4>Indian Institute of Technology, Delhi</h4>
-                        <p class="education-period">April 2024 - September 2024</p>
-                        <p class="education-field">Product Management</p>
-                    </div>
-                </div>
+  <!-- 4. Blog & Publications -->
+  <div class="card card-blog">
+    <div class="card-header">
+      <span class="card-icon">✍️</span>
+      <span class="card-title">Blog & Publications</span>
+    </div>
+    <div class="blog-list">
+      <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="blog-item">
+        <span class="blog-icon">📝</span>
+        <span class="blog-label">Medium Articles</span>
+        <span class="blog-tag">Blog</span>
+      </a>
+      <a href="https://devgenius.io/" target="_blank" class="blog-item">
+        <span class="blog-icon">💡</span>
+        <span class="blog-label">Dev Genius</span>
+        <span class="blog-tag">Publication</span>
+      </a>
+      <a href="https://developers.google.com/profile/u/sendtoshailesh" target="_blank" class="blog-item">
+        <span class="blog-icon">🔬</span>
+        <span class="blog-label">Google Dev Library</span>
+        <span class="blog-tag">Author</span>
+      </a>
+      <a href="portfolio.html#publications" class="blog-item">
+        <span class="blog-icon">🎤</span>
+        <span class="blog-label">Speaking & Talks</span>
+        <span class="blog-tag">Portfolio</span>
+      </a>
+    </div>
+  </div>
 
-                <div class="education-item">
-                    <div class="education-icon">
-                        <i class="fas fa-laptop-code"></i>
-                    </div>
-                    <div class="education-content">
-                        <h3>Master of Computer Applications (MCA)</h3>
-                        <h4>Indira Gandhi National Open University</h4>
-                        <p class="education-period">2018</p>
-                        <p class="education-field">Computer Science</p>
-                    </div>
-                </div>
+  <!-- 5. Daily Tools -->
+  <div class="card card-tools">
+    <div class="card-header">
+      <span class="card-icon">🛠️</span>
+      <span class="card-title">Daily Tools</span>
+    </div>
+    <div class="tools-grid">
+      <a href="https://github.com/features/copilot" target="_blank" class="tool-item">
+        <span class="tool-icon">🤖</span>
+        <span class="tool-label">GitHub Copilot</span>
+      </a>
+      <a href="https://chatgpt.com" target="_blank" class="tool-item">
+        <span class="tool-icon">💬</span>
+        <span class="tool-label">ChatGPT</span>
+      </a>
+      <a href="https://www.perplexity.ai" target="_blank" class="tool-item">
+        <span class="tool-icon">🔍</span>
+        <span class="tool-label">Perplexity</span>
+      </a>
+      <a href="https://insiders.vscode.dev/" target="_blank" class="tool-item">
+        <span class="tool-icon">💻</span>
+        <span class="tool-label">VS Code</span>
+      </a>
+      <a href="https://claude.ai" target="_blank" class="tool-item">
+        <span class="tool-icon">🧠</span>
+        <span class="tool-label">Claude</span>
+      </a>
+      <a href="https://excalidraw.com" target="_blank" class="tool-item">
+        <span class="tool-icon">🎨</span>
+        <span class="tool-label">Excalidraw</span>
+      </a>
+      <a href="https://mermaid.live" target="_blank" class="tool-item">
+        <span class="tool-icon">📊</span>
+        <span class="tool-label">Mermaid</span>
+      </a>
+      <a href="https://regex101.com" target="_blank" class="tool-item">
+        <span class="tool-icon">🔧</span>
+        <span class="tool-label">Regex101</span>
+      </a>
+      <a href="https://carbon.now.sh" target="_blank" class="tool-item">
+        <span class="tool-icon">📸</span>
+        <span class="tool-label">Carbon</span>
+      </a>
+    </div>
+  </div>
 
-                <div class="education-item">
-                    <div class="education-icon">
-                        <i class="fas fa-flask"></i>
-                    </div>
-                    <div class="education-content">
-                        <h3>Bachelor of Science (BS)</h3>
-                        <h4>V.B.S Purvanchal University</h4>
-                        <p class="education-period">2018</p>
-                        <p class="education-field">Chemistry</p>
-                    </div>
-                </div>
+  <!-- 6. Learning -->
+  <div class="card card-learning">
+    <div class="card-header">
+      <span class="card-icon">📚</span>
+      <span class="card-title">Learning & Certs</span>
+    </div>
+    <div class="learning-list">
+      <a href="https://www.upgrad.com/lxp/learner/dashboard" target="_blank" class="learning-item">
+        <span class="learning-icon">🎓</span>
+        <span class="learning-label">upGrad Platform</span>
+        <span class="learning-status status-active">Active</span>
+      </a>
+      <a href="portfolio.html#certifications" class="learning-item">
+        <span class="learning-icon">🏅</span>
+        <span class="learning-label">AWS / Azure / GCP Certs</span>
+        <span class="learning-status status-done">View</span>
+      </a>
+      <a href="https://freelearninglist.org/" target="_blank" class="learning-item">
+        <span class="learning-icon">📖</span>
+        <span class="learning-label">Free Learning Resources</span>
+        <span class="learning-status status-active">Browse</span>
+      </a>
+      <a href="https://www.kdnuggets.com/cheat-sheets/index.html" target="_blank" class="learning-item">
+        <span class="learning-icon">📋</span>
+        <span class="learning-label">Cheat Sheets</span>
+        <span class="learning-status status-done">Reference</span>
+      </a>
+    </div>
+  </div>
 
-                <div class="education-item">
-                    <div class="education-icon">
-                        <i class="fas fa-certificate"></i>
-                    </div>
-                    <div class="education-content">
-                        <h3>O Level</h3>
-                        <h4>DOEACC</h4>
-                        <p class="education-period">1998 - 1999</p>
-                        <p class="education-field">Computer Science</p>
-                    </div>
-                </div>
+  <!-- 7. Social -->
+  <div class="card card-social">
+    <div class="card-header">
+      <span class="card-icon">🌐</span>
+      <span class="card-title">Connect</span>
+    </div>
+    <div class="social-grid">
+      <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="social-link">
+        <span class="social-icon">💼</span> LinkedIn
+      </a>
+      <a href="https://github.com/sendtoshailesh" target="_blank" class="social-link">
+        <span class="social-icon">🐙</span> GitHub
+      </a>
+      <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="social-link">
+        <span class="social-icon">✍️</span> Medium
+      </a>
+      <a href="https://x.com/sendtoshailesh" target="_blank" class="social-link">
+        <span class="social-icon">🐦</span> X
+      </a>
+      <a href="mailto:sendtoshailesh@gmail.com" class="social-link">
+        <span class="social-icon">📧</span> Email
+      </a>
+      <a href="https://www.youtube.com/playlist?list=WL" target="_blank" class="social-link">
+        <span class="social-icon">🎬</span> YouTube
+      </a>
+    </div>
+  </div>
 
-                <div class="education-item">
-                    <div class="education-icon">
-                        <i class="fas fa-school"></i>
-                    </div>
-                    <div class="education-content">
-                        <h3>12th Standard</h3>
-                        <h4>Kendriya Vidyalaya</h4>
-                        <p class="education-field">Science</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- 8. Skills Snapshot -->
+  <div class="card card-skills">
+    <div class="card-header">
+      <span class="card-icon">💡</span>
+      <span class="card-title">Skills</span>
+      <a href="portfolio.html#skills" class="card-badge">Full List →</a>
+    </div>
+    <div class="skills-wrap">
+      <span class="skill-tag highlight">AI / ML</span>
+      <span class="skill-tag highlight">GitHub Copilot</span>
+      <span class="skill-tag highlight">GenAI / LLM</span>
+      <span class="skill-tag">AWS</span>
+      <span class="skill-tag">Azure</span>
+      <span class="skill-tag">PostgreSQL</span>
+      <span class="skill-tag">Cloud Architecture</span>
+      <span class="skill-tag">Data Migration</span>
+      <span class="skill-tag">RAG</span>
+      <span class="skill-tag">Docker / K8s</span>
+      <span class="skill-tag">Terraform</span>
+      <span class="skill-tag">Python</span>
+      <span class="skill-tag">Java</span>
+      <span class="skill-tag">System Design</span>
+      <span class="skill-tag">Technical Leadership</span>
+    </div>
+  </div>
 
-    <section id="skills" class="skills-section">
-        <div class="container">
-            <h2 class="section-title">Technical Proficiencies</h2>
-            <div class="skills-grid">
-                <div class="skill-category">
-                    <h3><i class="fas fa-cloud"></i> Cloud Platforms</h3>
-                    <div class="skill-tags">
-                        <span class="skill-tag expert">Microsoft Azure</span>
-                        <span class="skill-tag expert">AWS</span>
-                        <span class="skill-tag expert">Google Cloud</span>
-                        <span class="skill-tag advanced">Oracle Cloud</span>
-                    </div>
-                </div>
-                
-                <div class="skill-category">
-                    <h3><i class="fas fa-database"></i> Database Technologies</h3>
-                    <div class="skill-tags">
-                        <span class="skill-tag expert">Oracle</span>
-                        <span class="skill-tag expert">PostgreSQL</span>
-                        <span class="skill-tag expert">MySQL</span>
-                        <span class="skill-tag advanced">Amazon Aurora</span>
-                        <span class="skill-tag advanced">Google Cloud SQL</span>
-                        <span class="skill-tag advanced">Cloud Spanner</span>
-                    </div>
-                </div>
-                
-                <div class="skill-category">
-                    <h3><i class="fas fa-chart-bar"></i> Big Data & NoSQL</h3>
-                    <div class="skill-tags">
-                        <span class="skill-tag expert">Amazon Redshift</span>
-                        <span class="skill-tag expert">DynamoDB</span>
-                        <span class="skill-tag advanced">Google BigTable</span>
-                        <span class="skill-tag advanced">Apache Cassandra</span>
-                        <span class="skill-tag advanced">BigQuery</span>
-                    </div>
-                </div>
-                
-                <div class="skill-category">
-                    <h3><i class="fas fa-stream"></i> Data Streaming & Integration</h3>
-                    <div class="skill-tags">
-                        <span class="skill-tag expert">Apache Kafka</span>
-                        <span class="skill-tag advanced">Debezium</span>
-                        <span class="skill-tag advanced">AWS DMS</span>
-                    </div>
-                </div>
-                
-                <div class="skill-category">
-                    <h3><i class="fas fa-brain"></i> AI/ML & GenAI</h3>
-                    <div class="skill-tags">
-                        <span class="skill-tag expert">Artificial Intelligence (AI)</span>
-                        <span class="skill-tag expert">Machine Learning</span>
-                        <span class="skill-tag expert">Generative AI</span>
-                        <span class="skill-tag expert">LLM Evaluation</span>
-                        <span class="skill-tag expert">Microsoft AI Foundry</span>
-                        <span class="skill-tag expert">GitHub Copilot</span>
-                        <span class="skill-tag advanced">MCP Servers</span>
-                        <span class="skill-tag advanced">Agentic Apps</span>
-                    </div>
-                </div>
-                
-                <div class="skill-category">
-                    <h3><i class="fas fa-cogs"></i> Solution Architecture</h3>
-                    <div class="skill-tags">
-                        <span class="skill-tag expert">Microservices</span>
-                        <span class="skill-tag expert">Serverless Computing</span>
-                        <span class="skill-tag expert">Containerization</span>
-                        <span class="skill-tag expert">API Development</span>
-                        <span class="skill-tag advanced">Technical Sales</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+</main>
 
-    <section id="certifications" class="certifications">
-        <div class="container">
-            <h2 class="section-title">Certifications & Recognition</h2>
-            <div class="cert-grid">
-                <div class="cert-category">
-                    <h3><i class="fas fa-award"></i> Professional Certifications</h3>
-                    <div class="cert-list">
-                        <div class="cert-item">
-                            <i class="fab fa-aws"></i>
-                            <div>
-                                <h4>AWS Certified Solutions Architect – Professional</h4>
-                                <p>Advanced cloud architecture and solutions design</p>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <i class="fab fa-aws"></i>
-                            <div>
-                                <h4>AWS PR Tier 2 Speaker Certification</h4>
-                                <p>Authorized AWS public speaker and evangelist</p>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <i class="fab fa-google"></i>
-                            <div>
-                                <h4>Google Cloud Certified</h4>
-                                <p>Data Engineer & Digital Leader certifications</p>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <i class="fas fa-leaf"></i>
-                            <div>
-                                <h4>MongoDB Solutions Architect</h4>
-                                <p>NoSQL database architecture and design</p>
-                            </div>
-                        </div>
-                        <div class="cert-item">
-                            <i class="fas fa-graduation-cap"></i>
-                            <div>
-                                <h4>Financial Services L100</h4>
-                                <p>Specialized financial services solutions</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="cert-category">
-                    <h3><i class="fas fa-trophy"></i> Honors & Awards</h3>
-                    <div class="awards-list">
-                        <div class="award-item">
-                            <i class="fab fa-linkedin"></i>
-                            <span>LinkedIn Top Data Architecture Voice</span>
-                        </div>
-                        <div class="award-item">
-                            <i class="fab fa-aws"></i>
-                            <span>AWS All-Star Solution Architect</span>
-                        </div>
-                        <div class="award-item">
-                            <i class="fab fa-google"></i>
-                            <span>Most Impactful GCP Customer Advocate</span>
-                        </div>
-                        <div class="award-item">
-                            <i class="fas fa-medal"></i>
-                            <span>Best SME - IBM</span>
-                        </div>
-                        <div class="award-item">
-                            <i class="fas fa-robot"></i>
-                            <span>Automation Expert - IBM</span>
-                        </div>
-                        <div class="award-item">
-                            <i class="fas fa-database"></i>
-                            <span>Best DBA Support - IBM</span>
-                        </div>
-                        <div class="award-item">
-                            <i class="fas fa-star"></i>
-                            <span>Best of Operational Excellence - Amazon</span>
-                        </div>
-                        <div class="award-item">
-                            <i class="fas fa-network-wired"></i>
-                            <span>Networking Project Completion Excellence</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<!-- Footer -->
+<footer class="footer">
+  Built with ❤️ by Shailesh Mishra · <a href="portfolio.html" style="color:var(--accent)">Full Portfolio</a> · <a href="https://sendtoshailesh.github.io/my-bookmarks/" style="color:var(--accent)">Bookmarks</a>
+</footer>
 
-    <section id="projects" class="projects">
-        <div class="container">
-            <h2 class="section-title">Featured Projects & Achievements</h2>
-            <div class="projects-grid">
-                <div class="project-card featured">
-                    <div class="project-header">
-                        <i class="fas fa-robot"></i>
-                        <span class="project-year">2024-25</span>
-                    </div>
-                    <div class="project-content">
-                        <h3>AI-DLC Unicorn Gym</h3>
-                        <p class="project-subtitle">Inducing AI methodology into SDLC</p>
-                        <p>Led AWS's groundbreaking initiative to revolutionize Software Development Life Cycle through AI integration, achieving remarkable results in efficiency and training.</p>
-                        <div class="project-metrics">
-                            <div class="metric">
-                                <span class="metric-value">92%</span>
-                                <span class="metric-label">SDLC Timeline Reduction</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">500+</span>
-                                <span class="metric-label">Professionals Trained</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('hub-theme', next);
+  document.getElementById('btnTheme').textContent = next === 'dark' ? '🌙' : '☀️';
+}
 
-                <div class="project-card featured">
-                    <div class="project-header">
-                        <i class="fas fa-database"></i>
-                        <span class="project-year">2016-2019</span>
-                    </div>
-                    <div class="project-content">
-                        <h3>Rolling Stone Migration</h3>
-                        <p class="project-subtitle">Amazon's e-commerce tech stack migration to AWS</p>
-                        <p>Led the migration of Amazon's e-commerce tech stack from Oracle to AWS NoSQL, managing massive data volumes with zero downtime.</p>
-                        <div class="project-metrics">
-                            <div class="metric">
-                                <span class="metric-value">75PB</span>
-                                <span class="metric-label">Data Migrated</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">7,500</span>
-                                <span class="metric-label">Databases</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">60%</span>
-                                <span class="metric-label">Cost Reduction</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+// Restore theme
+const saved = localStorage.getItem('hub-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', saved);
+document.getElementById('btnTheme').textContent = saved === 'dark' ? '🌙' : '☀️';
 
-                <div class="project-card">
-                    <div class="project-header">
-                        <i class="fas fa-comments"></i>
-                        <span class="project-year">2024</span>
-                    </div>
-                    <div class="project-content">
-                        <h3>GenAI Chat Advisory Application</h3>
-                        <p>Designed and implemented GenAI-powered chat advisory application for Asset Management Companies.</p>
-                        <div class="project-metrics">
-                            <div class="metric">
-                                <span class="metric-value">75%</span>
-                                <span class="metric-label">Response Time Reduction</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">₹500Cr+</span>
-                                <span class="metric-label">Additional AUM</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+// Clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+updateClock();
+setInterval(updateClock, 30000);
 
-                <div class="project-card">
-                    <div class="project-header">
-                        <i class="fas fa-chart-line"></i>
-                        <span class="project-year">2021, 2023</span>
-                    </div>
-                    <div class="project-content">
-                        <h3>IPO Listing Platform</h3>
-                        <p>Designed and deployed rapid-scale serverless infrastructure for stock market IPO listings.</p>
-                        <div class="project-metrics">
-                            <div class="metric">
-                                <span class="metric-value">100K+</span>
-                                <span class="metric-label">Concurrent Users</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">99.999%</span>
-                                <span class="metric-label">Uptime</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <div class="project-header">
-                        <i class="fas fa-cogs"></i>
-                        <span class="project-year">2024</span>
-                    </div>
-                    <div class="project-content">
-                        <h3>Generative AI Production Support</h3>
-                        <p>Developed GenAI chatbot solution to automate routine support tasks and improve team efficiency.</p>
-                        <div class="project-metrics">
-                            <div class="metric">
-                                <span class="metric-value">93%</span>
-                                <span class="metric-label">Response Time Reduction</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">40%</span>
-                                <span class="metric-label">Efficiency Increase</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <div class="project-header">
-                        <i class="fas fa-shield-alt"></i>
-                        <span class="project-year">2025</span>
-                    </div>
-                    <div class="project-content">
-                        <h3>India FSI Air-Gapped Solutions</h3>
-                        <p>Architected air-gap solution for Indian Financial Services Industry to meet regulatory requirements.</p>
-                        <div class="project-metrics">
-                            <div class="metric">
-                                <span class="metric-value">100%</span>
-                                <span class="metric-label">Compliance</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">Enhanced</span>
-                                <span class="metric-label">Security</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="publications" class="publications">
-        <div class="container">
-            <h2 class="section-title">Publications & Thought Leadership</h2>
-            <div class="publications-grid">
-                <div class="publication-category">
-                    <h3><i class="fas fa-blog"></i> Technical Publications</h3>
-                    <div class="publication-list">
-                        <div class="publication-item">
-                            <h4>Thought Leadership</h4>
-                            <p>Regular contributor to industry publications and technical blogs</p>
-                        </div>
-                        <div class="publication-item">
-                            <h4>Dev Genius</h4>
-                            <p>Official author for Dev Genius publications on cloud and data architecture</p>
-                        </div>
-                        <div class="publication-item">
-                            <h4>Google Dev Library Contributor</h4>
-                            <p>Contributing technical content and best practices to Google's developer resources</p>
-                        </div>
-                        <div class="publication-item">
-                            <h4>AWS & Google Cloud Official Blogs</h4>
-                            <p>Authored multiple official blogs on database management and migration strategies</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="publication-category">
-                    <h3><i class="fas fa-microphone"></i> Speaking & Events</h3>
-                    <div class="speaking-list">
-                        <div class="speaking-item">
-                            <i class="fas fa-users"></i>
-                            <div>
-                                <h4>AWS Summit</h4>
-                                <p>Keynote speaker on cloud architecture and AI/ML solutions</p>
-                            </div>
-                        </div>
-                        <div class="speaking-item">
-                            <i class="fas fa-database"></i>
-                            <div>
-                                <h4>PostgreSQL Group Meetup</h4>
-                                <p>Technical presentations on database optimization and migration</p>
-                            </div>
-                        </div>
-                        <div class="speaking-item">
-                            <i class="fas fa-cloud"></i>
-                            <div>
-                                <h4>AWS User Group Seminars</h4>
-                                <p>Regular contributor to technical conferences and webinars</p>
-                            </div>
-                        </div>
-                        <div class="speaking-item">
-                            <i class="fas fa-broadcast-tower"></i>
-                            <div>
-                                <h4>Technical Conferences & Webcasts</h4>
-                                <p>Regular contributor to seminars, webinars, and industry events</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="publication-category">
-                    <h3><i class="fas fa-code"></i> Technical Articles</h3>
-                    <div class="article-list">
-                        <div class="article-item">
-                            <h4>Configuring Audit Log for Amazon RDS</h4>
-                            <p>Comprehensive guide on capturing database activities for Amazon RDS for MySQL and Amazon Aurora</p>
-                        </div>
-                        <div class="article-item">
-                            <h4>Secure Google Cloud SQL Instances</h4>
-                            <p>Best practices for using Private IP: Gotchas & troubleshooting techniques</p>
-                        </div>
-                        <div class="article-item">
-                            <h4>Database Migration Strategies</h4>
-                            <p>Multiple AWS and Google Cloud official blogs on migration best practices</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2 class="section-title">Get In Touch</h2>
-            <div class="contact-content">
-                <p>I'm always interested in strategic technology discussions, cloud architecture consultations, and AI/ML collaborations. Let's connect and explore opportunities to drive innovation together!</p>
-                
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <h4>Location</h4>
-                            <p>Hyderabad, Telangana, India</p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <h4>Email</h4>
-                            <p><a href="mailto:sendtoshailesh@gmail.com">sendtoshailesh@gmail.com</a></p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fab fa-linkedin"></i>
-                        <div>
-                            <h4>LinkedIn</h4>
-                            <p><a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank">linkedin.com/in/shaileshmishra1</a></p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fab fa-github"></i>
-                        <div>
-                            <h4>GitHub</h4>
-                            <p><a href="https://github.com/sendtoshailesh" target="_blank">github.com/sendtoshailesh</a></p>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fab fa-medium"></i>
-                        <div>
-                            <h4>Medium Blog</h4>
-                            <p><a href="https://medium.com/@shaileshkumarmishra" target="_blank">medium.com/@shaileshkumarmishra</a></p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="professional-summary">
-                    <h3>Professional Highlights</h3>
-                    <div class="highlights-grid">
-                        <div class="highlight">
-                            <span class="highlight-number">22+</span>
-                            <span class="highlight-text">Years Experience</span>
-                        </div>
-                        <div class="highlight">
-                            <span class="highlight-number">500+</span>
-                            <span class="highlight-text">Professionals Trained</span>
-                        </div>
-                        <div class="highlight">
-                            <span class="highlight-number">75PB</span>
-                            <span class="highlight-text">Data Migrated</span>
-                        </div>
-                        <div class="highlight">
-                            <span class="highlight-number">₹500Cr+</span>
-                            <span class="highlight-text">Business Impact</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <h3>Shailesh Mishra</h3>
-                    <p>Chief Dev Advisor @ Microsoft | ex-AWS, Google | 22+ Years in Enterprise Technology</p>
-                    <p>LinkedIn Top Data Architecture Voice | AWS All-Star Solution Architect</p>
-                </div>
-                <div class="footer-links">
-                    <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank"><i class="fab fa-linkedin"></i></a>
-                    <a href="https://github.com/sendtoshailesh" target="_blank"><i class="fab fa-github"></i></a>
-                    <a href="mailto:sendtoshailesh@gmail.com"><i class="fas fa-envelope"></i></a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Shailesh Mishra. Built with ❤️ and hosted on GitHub Pages.</p>
-            </div>
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
+// Greeting based on time
+function setGreeting() {
+  const h = new Date().getHours();
+  const el = document.getElementById('greetingText');
+  if (h < 12) el.textContent = 'Good morning';
+  else if (h < 17) el.textContent = 'Good afternoon';
+  else el.textContent = 'Good evening';
+}
+setGreeting();
+</script>
 </body>
 </html>
