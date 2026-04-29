@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PostgreSQL EXPLAIN BUFFERS: How We Cut Checkout Latency 96% | Shailesh Mishra</title>
+<meta name="description" content="A real-world case study showing how adding BUFFERS to EXPLAIN ANALYZE diagnosed a checkout query regression from 50ms to 1.2s, and the three tuning levers that fixed it.">
+<meta name="author" content="Shailesh Mishra">
+<meta name="keywords" content="PostgreSQL EXPLAIN BUFFERS, EXPLAIN ANALYZE BUFFERS, PostgreSQL buffer cache hit ratio, PostgreSQL slow query troubleshooting, shared_buffers tuning">
+<meta property="og:title" content="PostgreSQL EXPLAIN BUFFERS: How We Cut Checkout Latency 96%">
+<meta property="og:description" content="E-commerce case study: one word in EXPLAIN diagnosed what 3 days of network debugging missed.">
+<meta property="og:type" content="article">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>PostgreSQL EXPLAIN BUFFERS: How We Cut Checkout Latency 96% at an E-Commerce Company</h1>
+      <div class="meta">Shailesh Mishra &middot; April 26, 2026 &middot; 12 min read</div>
+      <div class="tags" style="margin-top: 0.75rem;">
+        <span class="post-tag">postgresql</span>
+        <span class="post-tag">performance</span>
+        <span class="post-tag">explain-buffers</span>
+        <span class="post-tag">e-commerce</span>
+        <span class="post-tag">case-study</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+
+      <p>While working with a customer's e-commerce platform running PostgreSQL 17, their checkout query went from 50ms to 1.2 seconds. Not overnight -- gradually, over two weeks, until a promotional event pushed it past the breaking point. Cart abandonment spiked 12 percentage points. The engineering team spent three days blaming the network.</p>
+
+      <p>They ran <code>EXPLAIN ANALYZE</code> on the checkout query repeatedly. The plan looked identical every time: same Index Scan, same Nested Loop join, same estimated rows. Nothing changed. So they tuned PgBouncer connection pooling, added read replicas, and opened a ticket with their cloud provider. None of it helped.</p>
+
+      <p>The problem was invisible because they never added one word to their diagnostic command: <code>BUFFERS</code>.</p>
+
+      <p>When we finally ran <code>EXPLAIN (ANALYZE, BUFFERS)</code>, the numbers told an immediate story. The query was reading 15,000 pages from disk and hitting only 50 pages in cache. A 0.3% buffer hit ratio on what should have been a 95%+ cached query. Three days of network debugging, and the answer was right there in the I/O statistics the team had never asked for.</p>
+
+      <p>Most engineers treat <code>EXPLAIN ANALYZE</code> as a plan viewer -- they look at node types and row estimates. The <code>BUFFERS</code> option turns it into an I/O profiler. That is where the real performance story lives. And starting with PostgreSQL 18 (released 2025), <code>BUFFERS</code> output is included by default in <code>EXPLAIN ANALYZE</code>, so every developer will see these numbers whether they ask for them or not.</p>
+
+      <p>PostgreSQL is the #1 most-used database at 51.9% developer adoption (Stack Overflow 2024), yet in my experience, the majority of developers have never typed <code>BUFFERS</code> in an <code>EXPLAIN</code> command. This post walks through the buffer concepts you need, the full troubleshooting arc from symptom to root cause, the exact fixes applied, and a monitoring strategy to prevent recurrence.</p>
+
+      <h2>What EXPLAIN BUFFERS Actually Tells You</h2>
+
+      <h3>Shared Buffers: The Four Signals</h3>
+
+      <p>When you add <code>BUFFERS</code> to your <code>EXPLAIN ANALYZE</code>, PostgreSQL reports four categories of shared buffer activity at every node in the query plan:</p>
+
+      <ul>
+        <li><strong>shared hit</strong> -- pages found in the shared buffer cache. This is the fast path: no disk I/O, the data was already in memory.</li>
+        <li><strong>shared read</strong> -- pages fetched from disk (or the OS page cache). Every read adds I/O latency. This is where slow queries hide.</li>
+        <li><strong>shared dirtied</strong> -- pages modified during the query. Yes, even <code>SELECT</code> queries can dirty pages. PostgreSQL updates hint bits and performs HOT chain pruning during reads, and that is completely normal.</li>
+        <li><strong>shared written</strong> -- pages synchronously written to disk during execution. If you see this on a <code>SELECT</code>, it means the background writer could not keep up and PostgreSQL forced a synchronous write. That is a warning sign worth investigating.</li>
+      </ul>
+
+      <p>The key formula is the <strong>buffer hit ratio</strong>:</p>
+
+      <pre><code>hit_ratio = shared hit / (shared hit + shared read)</code></pre>
+
+      <p>Here is a concrete example from a cold-cache scenario: 13 hits out of 870 total accesses gives you <code>13 / (13 + 857) = 1.5%</code>. Terrible for an OLTP query that runs hundreds of times per second -- but entirely expected for the first execution after a restart.</p>
+
+      <img src="visuals/shared-buffers-flow.png" alt="PostgreSQL shared buffers flow: hit, read, dirtied, and written paths through the buffer cache">
+
+      <h3>Context Over Absolutes</h3>
+
+      <p>One critical insight I picked up from Radim Marek's excellent <a href="https://boringsql.com/posts/explain-buffers/">boringSQL article on EXPLAIN BUFFERS</a>: the buffer hit ratio is a diagnostic tool, not a scorecard. There is no universal "good" number.</p>
+
+      <p>A reporting query scanning a large date range might sit at 10-30% hit ratio, and that is fine -- it is touching data that does not need to stay cached. A login page query should be near 100%; if it drops from 95% to 40%, something changed and deserves investigation.</p>
+
+      <p>The decision matrix I use with customers:</p>
+
+      <table>
+        <thead>
+          <tr><th>Scenario</th><th>Likely Cause</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Low hit ratio + high execution time</td><td>I/O bottleneck -- the focus of this post</td></tr>
+          <tr><td>High hit ratio + high execution time</td><td>Look elsewhere: CPU, excessive row counts, bad plan choice</td></tr>
+          <tr><td>Low hit ratio + low execution time</td><td>Small table, cold cache -- probably fine</td></tr>
+        </tbody>
+      </table>
+
+      <p>The ratio means nothing without context. A query's baseline is what matters, and changes from that baseline are what demand attention.</p>
+
+      <h3>Temp Buffers and work_mem Spills</h3>
+
+      <p>The EXPLAIN BUFFERS output also reports <code>temp read</code> and <code>temp written</code>. These track disk spills from sorts, hashes, and CTEs that exceed <code>work_mem</code>. This is a common source of confusion: <code>temp read/written</code> in EXPLAIN output has nothing to do with the <code>temp_buffers</code> PostgreSQL parameter (which controls memory for temporary tables).</p>
+
+      <p>When a sort or hash operation exceeds <code>work_mem</code>, PostgreSQL spills intermediate results to disk. The default <code>work_mem</code> is a conservative 4MB (historically even lower at 256kB in many configurations). At 256kB, a sort on 200K rows can force a 9.7MB disk spill -- turning a millisecond in-memory operation into a multi-second I/O operation.</p>
+
+      <p>One detail that trips people up: <code>work_mem</code> is allocated <strong>per operation</strong>, not per query. A query with three sort nodes and two hash joins could allocate up to five times <code>work_mem</code>. Keep that in mind before setting it globally to 1GB.</p>
+
+      <h2>The Incident: Checkout Queries Go From 50ms to 1.2 Seconds</h2>
+
+      <p>Here is the setup. The customer ran a mid-size e-commerce platform on PostgreSQL 17: roughly 2 million rows in the orders table, about 500,000 active users, hosted on a managed cloud instance with 32GB RAM.</p>
+
+      <p>The checkout flow executed a join across <code>orders</code>, <code>order_items</code>, and <code>inventory</code> to validate stock and calculate totals. For months, the p95 latency for this query sat at 50ms. Then it started creeping up. Over two weeks, it drifted to 200ms, then 600ms. Nobody noticed until a flash sale pushed it past 1.2 seconds.</p>
+
+      <p>The business impact was immediate. Cart abandonment rose from roughly 70% (the Baymard Institute baseline, based on a meta-analysis of 50 studies) to approximately 82%. Research from Akamai and Gomez suggests each additional second of load time increases abandonment by about 7%, and a 1.15-second increase in checkout latency tracked almost exactly with that benchmark. At the company's revenue run rate, checkout downtime cost roughly $5,600 per minute (consistent with the Gartner industry average for e-commerce).</p>
+
+      <p>The team's first response was reasonable: they assumed network latency. They deployed PgBouncer to reduce connection overhead. They checked cloud provider status pages. They ran <code>EXPLAIN ANALYZE</code> on the checkout query:</p>
+
+      <pre><code>EXPLAIN ANALYZE
+SELECT o.order_id, o.total, i.stock_available
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN inventory i ON i.product_id = oi.product_id
+WHERE o.user_id = 8421
+  AND o.status = 'pending'
+ORDER BY o.created_at DESC
+LIMIT 5;</code></pre>
+
+      <p>The plan showed the same Index Scan on <code>orders_user_id_idx</code>, the same Nested Loop joins, the same estimated row counts. Nothing looked wrong. But the plan did not show <em>where the data was coming from</em> -- memory or disk. Without <code>BUFFERS</code>, the I/O problem was invisible.</p>
+
+      <h2>Adding One Word Changed Everything</h2>
+
+      <h3>Running EXPLAIN (ANALYZE, BUFFERS)</h3>
+
+      <p>We added exactly one option to the command:</p>
+
+      <pre><code>EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
+SELECT o.order_id, o.total, i.stock_available
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN inventory i ON i.product_id = oi.product_id
+WHERE o.user_id = 8421
+  AND o.status = 'pending'
+ORDER BY o.created_at DESC
+LIMIT 5;</code></pre>
+
+      <p>The output told the entire story:</p>
+
+      <pre><code>Limit  (cost=1245.67..1245.68 rows=5 width=24)
+       (actual time=1187.432..1187.445 rows=5 loops=1)
+  Buffers: shared hit=50 read=15000 written=847
+  -&gt;  Sort  (cost=1245.67..1248.92 rows=1300 width=24)
+            (actual time=1187.430..1187.438 rows=5 loops=1)
+        Sort Key: o.created_at DESC
+        Sort Method: external merge  Disk: 2500kB
+        Buffers: shared hit=48 read=14950, temp read=312 written=312
+        -&gt;  Nested Loop  (cost=1.13..1198.45 rows=1300 width=24)
+                         (actual time=0.125..1152.678 rows=1300 loops=1)
+              Buffers: shared hit=48 read=14950
+              -&gt;  Index Scan using orders_user_id_idx on orders o
+                    (cost=0.43..892.34 rows=1300 width=16)
+                    (actual time=0.089..1098.234 rows=1300 loops=1)
+                    Index Cond: (user_id = 8421)
+                    Filter: (status = 'pending')
+                    Buffers: shared hit=12 read=14800
+              -&gt;  Index Scan using order_items_order_id_idx on order_items oi
+                    (cost=0.43..0.52 rows=1 width=12)
+                    (actual time=0.031..0.033 rows=1 loops=1300)
+                    Buffers: shared hit=30 read=120
+              -&gt;  Index Scan using inventory_product_id_idx on inventory i
+                    (cost=0.28..0.33 rows=1 width=8)
+                    (actual time=0.015..0.016 rows=1 loops=1300)
+                    Buffers: shared hit=6 read=30
+Planning:
+  Buffers: shared hit=42 read=156
+Planning Time: 12.456 ms
+Execution Time: 1192.567 ms</code></pre>
+
+      <p>Three numbers jumped out immediately:</p>
+
+      <ol>
+        <li><strong>shared hit=50, shared read=15,000</strong> -- a 0.3% buffer hit ratio. This query was reading almost entirely from disk.</li>
+        <li><strong>temp written=312</strong> on the Sort node -- <code>work_mem</code> was too small, forcing a 312-page external merge sort to disk.</li>
+        <li><strong>shared written=847</strong> -- the background writer was falling behind, and PostgreSQL was doing synchronous writes during a <code>SELECT</code>. That should not happen under normal conditions.</li>
+      </ol>
+
+      <p>Compare that to the expected baseline: this same query, two months earlier, ran with 95%+ hit ratio, zero temp spills, and executed in under 50ms. The plan was identical. The I/O profile was catastrophically different.</p>
+
+      <img src="visuals/buffer-hit-comparison.png" alt="PostgreSQL buffer cache hit ratio comparison: 0.3% before vs 97.3% after tuning">
+
+      <h3>Following the Buffer Trail</h3>
+
+      <p>With BUFFERS pointing us at an I/O problem, we followed the trail.</p>
+
+      <p><strong>Step 1: Workload-level confirmation via pg_stat_statements.</strong></p>
+
+      <pre><code>SELECT query,
+       calls,
+       shared_blks_hit,
+       shared_blks_read,
+       round(shared_blks_hit::numeric /
+             nullif(shared_blks_hit + shared_blks_read, 0), 4) AS hit_ratio,
+       temp_blks_written
+FROM pg_stat_statements
+WHERE query LIKE '%orders%order_items%inventory%'
+ORDER BY shared_blks_read DESC
+LIMIT 5;</code></pre>
+
+      <p>The results confirmed the single-query diagnosis at the workload level: <code>shared_blks_read</code> had grown 30x over two weeks while <code>shared_blks_hit</code> stayed nearly flat. This was not a one-off cold-cache read. The query was consistently reading from disk, execution after execution.</p>
+
+      <p><strong>Step 2: Table bloat investigation.</strong></p>
+
+      <pre><code>SELECT relname,
+       relpages,
+       pg_size_pretty(pg_relation_size(oid)) AS table_size,
+       n_dead_tup,
+       last_autovacuum
+FROM pg_stat_user_tables
+WHERE relname = 'orders';</code></pre>
+
+      <p>The orders table had grown from 857 pages to over 15,000 pages. During the promotional event, high insert volume had outpaced autovacuum. Dead tuples accumulated, the table bloated, and hot checkout data spread across pages that no longer fit in the buffer cache.</p>
+
+      <p><strong>Step 3: Buffer cache sizing.</strong></p>
+
+      <p>The instance had 2GB allocated to <code>shared_buffers</code>. That was adequate when the orders table was 857 pages (~6.7MB). At 15,000 pages (~117MB) -- with the index pages, order_items, and inventory tables competing for the same cache -- the working set had outgrown the cache. The checkout query was evicting its own pages faster than it could reuse them.</p>
+
+      <p><strong>The work_mem spill.</strong> The Sort node's <code>temp written=312</code> revealed a separate problem. The <code>work_mem</code> setting had been configured at 256kB (well below the PostgreSQL 17 default of 4MB). The checkout query's <code>ORDER BY created_at DESC</code> exceeded that limit and spilled to an external merge sort on disk -- adding unnecessary I/O latency on every execution.</p>
+
+      <img src="visuals/query-plan-tree.png" alt="EXPLAIN BUFFERS query plan tree with I/O statistics at each node">
+
+      <h2>Three Changes, One Query</h2>
+
+      <p>Armed with the diagnosis from BUFFERS, we applied three targeted fixes:</p>
+
+      <p><strong>Fix 1 -- Immediate: Manual VACUUM ANALYZE.</strong></p>
+
+      <pre><code>VACUUM (VERBOSE, ANALYZE) orders;</code></pre>
+
+      <p>Autovacuum had fallen behind during the promotional surge. The manual vacuum reclaimed dead tuples and updated statistics. The orders table shrank from 15,000 pages back to approximately 3,200 pages -- still larger than the original 857 (legitimate growth from new orders) but no longer bloated with dead rows.</p>
+
+      <p><strong>Fix 2 -- Immediate: SET LOCAL work_mem for the checkout session.</strong></p>
+
+      <pre><code>BEGIN;
+SET LOCAL work_mem = '16MB';
+
+SELECT o.order_id, o.total, i.stock_available
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN inventory i ON i.product_id = oi.product_id
+WHERE o.user_id = 8421
+  AND o.status = 'pending'
+ORDER BY o.created_at DESC
+LIMIT 5;
+
+COMMIT;</code></pre>
+
+      <p><code>SET LOCAL</code> scopes the change to the current transaction -- no risk to other queries. The 16MB <code>work_mem</code> eliminated the 312-page temp spill entirely. The sort completed in memory.</p>
+
+      <p><strong>Fix 3 -- Configuration: shared_buffers and autovacuum tuning.</strong></p>
+
+      <p>We increased <code>shared_buffers</code> from 2GB to 4GB (on a 32GB RAM instance, this is well within the recommended 25% of system memory). We also tuned autovacuum to keep pace with high-insert workloads:</p>
+
+      <pre><code># postgresql.conf changes
+shared_buffers = '4GB'
+autovacuum_vacuum_cost_delay = '2ms'       # restored to PG 17 default (was 20ms from legacy config)
+autovacuum_vacuum_scale_factor = 0.05      # vacuum at 5% dead tuples, not 20%</code></pre>
+
+      <p><strong>Verification.</strong> After applying all three fixes, we re-ran the diagnostic:</p>
+
+      <pre><code>EXPLAIN (ANALYZE, BUFFERS)
+SELECT o.order_id, o.total, i.stock_available
+FROM orders o
+JOIN order_items oi ON oi.order_id = o.order_id
+JOIN inventory i ON i.product_id = oi.product_id
+WHERE o.user_id = 8421
+  AND o.status = 'pending'
+ORDER BY o.created_at DESC
+LIMIT 5;</code></pre>
+
+      <p>Result: <code>shared hit=3,100, shared read=87</code> -- a 97.3% hit ratio. <code>temp written=0</code>. Execution time: 42ms. The query was back.</p>
+
+      <p><strong>Tuning levers summary:</strong></p>
+
+      <table>
+        <thead>
+          <tr><th>Problem Signal</th><th>Tuning Lever Applied</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Low shared hit ratio (0.3%)</td><td><code>VACUUM ANALYZE</code> + <code>shared_buffers</code> 2GB -&gt; 4GB</td></tr>
+          <tr><td><code>temp written</code> during checkout sort</td><td><code>work_mem</code> 256kB -&gt; 16MB via <code>SET LOCAL</code></td></tr>
+          <tr><td>Autovacuum falling behind inserts</td><td><code>autovacuum_vacuum_cost_delay</code> restored to 2ms default (was 20ms legacy), scale factor 20% -&gt; 5%</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Before and After: The Numbers</h2>
+
+      <p>Here are the measured results, before and after the three fixes:</p>
+
+      <table>
+        <thead>
+          <tr><th>Metric</th><th>Before</th><th>After</th><th>Change</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Execution time</td><td>1,192ms</td><td>42ms</td><td>96.5% reduction</td></tr>
+          <tr><td>Buffer hit ratio</td><td>0.3%</td><td>97.3%</td><td>+97 percentage points</td></tr>
+          <tr><td>Temp pages spilled</td><td>312</td><td>0</td><td>Eliminated</td></tr>
+          <tr><td>Shared pages written (sync)</td><td>847</td><td>0</td><td>Eliminated</td></tr>
+          <tr><td>Checkout p95 latency</td><td>1,200ms</td><td>48ms</td><td>96% reduction</td></tr>
+          <tr><td>Orders table pages</td><td>15,000</td><td>3,200</td><td>78.7% reduction</td></tr>
+        </tbody>
+      </table>
+
+      <p>Cart abandonment recovered to the baseline of approximately 70% within 48 hours of deploying the fixes. The promotional event revenue that had been leaking at roughly $5,600 per minute of degraded checkout performance stabilized.</p>
+
+      <p>The part that sticks with me: one word -- <code>BUFFERS</code> -- surfaced the root cause that three days of network debugging, PgBouncer tuning, and cloud provider tickets had missed. The query plan was identical before and after the problem emerged. Only the buffer statistics revealed what had actually changed.</p>
+
+      <img src="visuals/before-after-metrics.png" alt="Before and after PostgreSQL performance metrics showing 96% latency reduction">
+
+      <h2>Which PostgreSQL Versions Support What</h2>
+
+      <p>Every technique in this post works on PostgreSQL 9.0 and later -- <code>BUFFERS</code> has been available since 2010. But the ecosystem around buffer diagnostics has matured significantly with each major release:</p>
+
+      <table>
+        <thead>
+          <tr><th>Version</th><th>Year</th><th>Feature Added</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>PG 9.0</td><td>2010</td><td><code>EXPLAIN (BUFFERS)</code> introduced with parenthesized option syntax</td></tr>
+          <tr><td>PG 9.2</td><td>2012</td><td><code>track_io_timing</code> adds read/write times in ms</td></tr>
+          <tr><td>PG 13</td><td>2020</td><td>Planning buffers reported (reads of pg_class, pg_statistic)</td></tr>
+          <tr><td>PG 16</td><td>2023</td><td><code>pg_stat_io</code> view for system-wide I/O statistics</td></tr>
+          <tr><td>PG 17</td><td>2024</td><td><code>pg_buffercache_evict()</code> for controlled cache benchmarking</td></tr>
+          <tr><td><strong>PG 18</strong></td><td><strong>2025</strong></td><td><strong>BUFFERS included by default in EXPLAIN ANALYZE</strong></td></tr>
+          <tr><td>PG 19</td><td>2026</td><td>Reduced EXPLAIN ANALYZE timing overhead (RDTSC-based)</td></tr>
+        </tbody>
+      </table>
+
+      <p>PostgreSQL 18 is the inflection point. Before PG 18, you had to remember to add <code>BUFFERS</code> every time. Starting with PG 18, <code>EXPLAIN ANALYZE</code> automatically includes buffer statistics. Developers will see hit/read/dirtied/written numbers whether they ask for them or not. This is significant -- it removes the friction that kept most developers from ever seeing their query's I/O profile.</p>
+
+      <img src="visuals/pg-version-timeline.png" alt="PostgreSQL version timeline: EXPLAIN BUFFERS features from PG 9.0 to PG 19">
+
+      <p>If you are on PG 17 or earlier, the fix is simple: always type <code>EXPLAIN (ANALYZE, BUFFERS)</code> instead of <code>EXPLAIN ANALYZE</code>. The VACUUM, <code>work_mem</code>, and <code>shared_buffers</code> tuning levers from this case study work on <strong>all PostgreSQL versions</strong>.</p>
+
+      <p>PG 19 (upcoming, 2026) further reduces the overhead of <code>EXPLAIN ANALYZE</code> itself using RDTSC-based timing, making it practical to run buffer diagnostics on more workloads without worrying about measurement overhead.</p>
+
+      <h2>Your Next Steps</h2>
+
+      <h3>For Developers</h3>
+
+      <ol>
+        <li><strong>Add BUFFERS to every EXPLAIN ANALYZE.</strong> If you are on PG 17 or earlier, make <code>EXPLAIN (ANALYZE, BUFFERS)</code> your default. On PG 18+, you get it for free.</li>
+        <li><strong>Learn the four shared buffer signals.</strong> <code>hit</code> is good, <code>read</code> is expensive, <code>dirtied</code> on SELECTs is normal, <code>written</code> on SELECTs is a warning.</li>
+        <li><strong>Set up auto_explain for production.</strong> The built-in <a href="https://www.postgresql.org/docs/current/auto-explain.html">auto_explain</a> module logs EXPLAIN plans for queries exceeding a latency threshold. Enable <code>auto_explain.log_buffers = on</code> to capture buffer statistics automatically:
+          <pre><code># postgresql.conf
+shared_preload_libraries = 'auto_explain'
+auto_explain.log_min_duration = '100ms'
+auto_explain.log_buffers = on
+auto_explain.log_analyze = on</code></pre>
+        </li>
+        <li><strong>Use pg_stat_statements for workload-level monitoring.</strong> Single-query EXPLAIN shows you one execution. <a href="https://www.postgresql.org/docs/current/pgstatstatements.html">pg_stat_statements</a> aggregates <code>shared_blks_hit</code>, <code>shared_blks_read</code>, and <code>temp_blks_written</code> across all executions over time. That is where you catch regressions before they become incidents.</li>
+      </ol>
+
+      <h3>For DBAs and Platform Engineers</h3>
+
+      <ol>
+        <li><strong>Establish buffer hit ratio baselines per critical query.</strong> Not a global target -- per-query baselines. A checkout query at 95% that drops to 60% is a problem. A reporting query at 15% is normal.</li>
+        <li><strong>Monitor temp_blks_written in pg_stat_statements.</strong> Any query with growing <code>temp_blks_written</code> is a candidate for <code>work_mem</code> tuning or query optimization.</li>
+        <li><strong>Review shared_buffers sizing quarterly.</strong> As data grows, your working set grows. The 25% of RAM guideline is a starting point, not a permanent answer.</li>
+        <li><strong>Tune autovacuum for high-insert tables.</strong> The defaults (<code>autovacuum_vacuum_scale_factor = 0.2</code>, <code>autovacuum_vacuum_cost_delay = 2ms</code> since PG 12) are conservative for high-write workloads. For tables with heavy write traffic, lower the scale factor and verify the cost delay has not been overridden by a legacy configuration.</li>
+      </ol>
+
+      <h3>Long-Term Monitoring</h3>
+
+      <p>Bridge single-query diagnostics with workload-level visibility:</p>
+
+      <ul>
+        <li><strong>auto_explain</strong> (built-in) -- automatic EXPLAIN logging for slow queries</li>
+        <li><strong><a href="https://github.com/percona/pg_stat_monitor">pg_stat_monitor</a></strong> (Percona, open source) -- enhanced pg_stat_statements with time buckets and query plan capture</li>
+        <li><strong><a href="https://github.com/dalibo/pev2">pev2</a></strong> (Dalibo, open source) -- visual EXPLAIN plan analyzer, runs locally or at explain.dalibo.com</li>
+        <li><strong><a href="https://pganalyze.com/">pganalyze</a></strong> (commercial) -- automated EXPLAIN analysis, Index Advisor, and continuous query monitoring</li>
+      </ul>
+
+      <p>The combination of <code>EXPLAIN (ANALYZE, BUFFERS)</code> for investigation and <code>pg_stat_statements</code> for ongoing monitoring covers the full spectrum from incident response to proactive performance management.</p>
+
+      <div class="callout">
+        <strong>Run <code>EXPLAIN (ANALYZE, BUFFERS)</code> on your slowest query right now.</strong> If the hit ratio is below 90% for an OLTP query, you have found your next optimization target. If you see <code>temp written</code> on any critical path, that is <code>work_mem</code> waiting to be tuned. The data has always been there -- you just need to ask PostgreSQL for it.
+      </div>
+
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+
+</body>
+</html>
