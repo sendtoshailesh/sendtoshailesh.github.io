@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shailesh Mishra — Personal Hub</title>
-<meta name="description" content="Personal hub for Shailesh Mishra — Chief Dev Advisor at Microsoft. Quick access to projects, bookmarks, tools, and more.">
+<title>Shailesh Mishra — Chief Dev Advisor | AI, Data & Cloud</title>
+<meta name="description" content="Shailesh Mishra — Chief Dev Advisor at Microsoft Asia. 22+ years in AI, Data & Cloud Transformation. ex-AWS, Google, Oracle, IBM.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ── Reset & Variables ─────────────────────────────────────────── */
+/* ── Reset ────────────────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
@@ -25,6 +25,7 @@
   --bg-card: #141419;
   --bg-card-hover: #1a1a22;
   --bg-glass: rgba(20, 20, 25, 0.8);
+  --bg-section-alt: #0e0e14;
   --border: rgba(255,255,255,0.06);
   --border-hover: rgba(255,255,255,0.12);
   --text-0: #f0f0f5;
@@ -47,6 +48,7 @@
   --bg-card: #ffffff;
   --bg-card-hover: #fafafa;
   --bg-glass: rgba(255,255,255,0.9);
+  --bg-section-alt: #eeeef2;
   --border: rgba(0,0,0,0.06);
   --border-hover: rgba(0,0,0,0.12);
   --text-0: #1a1a2e;
@@ -67,53 +69,304 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--font); background: var(--bg-page); color: var(--text-0);
-  min-height: 100vh; line-height: 1.5;
+  min-height: 100vh; line-height: 1.6;
 }
 a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
 
-/* ── Header ────────────────────────────────────────────────────── */
-.header {
-  position: sticky; top: 0; z-index: 100;
+/* ── Nav ──────────────────────────────────────────────────────── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   background: var(--bg-glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
 }
-.header-inner {
+.nav-inner {
   max-width: var(--max-w); margin: 0 auto; padding: 14px 24px;
   display: flex; align-items: center; justify-content: space-between;
 }
-.header-left { display: flex; align-items: center; gap: 12px; }
-.avatar {
+.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-avatar {
   width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent);
   object-fit: cover;
 }
-.header-name { font-size: 15px; font-weight: 600; }
-.header-role { font-size: 12px; color: var(--text-2); }
-.header-actions { display: flex; align-items: center; gap: 8px; }
+.nav-name { font-size: 15px; font-weight: 700; color: var(--text-0); }
+.nav-links { display: flex; align-items: center; gap: 24px; }
+.nav-links a {
+  font-size: 13px; font-weight: 500; color: var(--text-1);
+  transition: color var(--transition);
+}
+.nav-links a:hover, .nav-links a.active { color: var(--accent); }
+.nav-actions { display: flex; align-items: center; gap: 8px; }
 .btn-icon {
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   background: var(--tag-bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
   cursor: pointer; color: var(--text-1); font-size: 16px; transition: all var(--transition);
 }
 .btn-icon:hover { background: var(--bg-card-hover); color: var(--text-0); border-color: var(--border-hover); }
-.clock { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.nav-mobile { display: none; cursor: pointer; background: none; border: none; color: var(--text-0); font-size: 24px; }
 
 /* ── Hero ──────────────────────────────────────────────────────── */
 .hero {
-  max-width: var(--max-w); margin: 0 auto; padding: 40px 24px 20px;
+  min-height: 100vh; display: flex; align-items: center;
+  padding: 120px 24px 80px; position: relative; overflow: hidden;
 }
-.greeting { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-.greeting-emoji { font-size: 32px; }
-.greeting-sub { font-size: 15px; color: var(--text-1); max-width: 600px; }
+.hero::before {
+  content: ''; position: absolute; top: -50%; right: -20%; width: 800px; height: 800px;
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-inner {
+  max-width: var(--max-w); margin: 0 auto; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 20px;
+  background: var(--accent-glow); color: var(--accent);
+  font-size: 12px; font-weight: 600; margin-bottom: 20px;
+  border: 1px solid rgba(108,99,255,0.2);
+}
+.hero h1 { font-size: 52px; font-weight: 900; line-height: 1.1; margin-bottom: 16px; }
+.hero h1 .accent { color: var(--accent); }
+.hero-tagline {
+  font-size: 18px; color: var(--text-1); line-height: 1.6; margin-bottom: 12px; font-weight: 400;
+}
+.hero-desc {
+  font-size: 15px; color: var(--text-2); line-height: 1.7; margin-bottom: 32px; max-width: 520px;
+}
+.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px; border-radius: var(--radius-sm);
+  background: var(--gradient-accent); color: white; font-size: 14px; font-weight: 600;
+  transition: all var(--transition); border: none; cursor: pointer;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(108,99,255,0.4); }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-0); font-size: 14px; font-weight: 600;
+  border: 1px solid var(--border); transition: all var(--transition); cursor: pointer;
+}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+.hero-image { display: flex; justify-content: center; position: relative; z-index: 1; }
+.hero-image img {
+  width: 340px; height: 340px; border-radius: 50%; object-fit: cover;
+  border: 4px solid var(--accent); box-shadow: 0 0 60px rgba(108,99,255,0.2);
+}
+.hero-socials { display: flex; gap: 12px; margin-top: 24px; }
+.hero-socials a {
+  width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm); background: var(--tag-bg); border: 1px solid var(--border);
+  color: var(--text-1); font-size: 18px; transition: all var(--transition);
+}
+.hero-socials a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); transform: translateY(-2px); }
+.hero-socials svg { width: 18px; height: 18px; fill: currentColor; }
 
-/* ── Bento Grid ────────────────────────────────────────────────── */
+/* ── Section Shared ───────────────────────────────────────────── */
+.section { padding: 100px 24px; }
+.section-alt { background: var(--bg-section-alt); }
+.section-inner { max-width: var(--max-w); margin: 0 auto; }
+.section-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 20px;
+  background: var(--accent-glow); color: var(--accent);
+  font-size: 12px; font-weight: 600; margin-bottom: 16px;
+  border: 1px solid rgba(108,99,255,0.2);
+}
+.section-title { font-size: 36px; font-weight: 800; margin-bottom: 16px; line-height: 1.2; }
+.section-subtitle { font-size: 16px; color: var(--text-1); max-width: 600px; margin-bottom: 48px; line-height: 1.6; }
+
+/* ── Stats Strip ──────────────────────────────────────────────── */
+.stats-strip {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 40px; margin: -60px 24px 0; position: relative; z-index: 10;
+  max-width: var(--max-w); margin-left: auto; margin-right: auto;
+}
+.stats-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 24px; text-align: center;
+}
+.stat-item {}
+.stat-number { font-size: 32px; font-weight: 800; color: var(--accent); display: block; }
+.stat-label { font-size: 12px; color: var(--text-2); font-weight: 500; margin-top: 4px; }
+
+/* ── Focus Pillars ────────────────────────────────────────────── */
+.pillars-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+}
+.pillar-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 32px 24px; transition: all var(--transition); position: relative; overflow: hidden;
+}
+.pillar-card:hover {
+  border-color: var(--border-hover); transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.pillar-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--gradient-accent); opacity: 0; transition: opacity var(--transition);
+}
+.pillar-card:hover::before { opacity: 1; }
+.pillar-icon { font-size: 32px; margin-bottom: 16px; }
+.pillar-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--accent); margin-bottom: 10px;
+}
+.pillar-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+.pillar-desc { font-size: 13px; color: var(--text-1); line-height: 1.6; }
+
+/* ── Philosophy ───────────────────────────────────────────────── */
+.philosophy {
+  text-align: center; padding: 80px 24px;
+  background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.philosophy-inner { max-width: 700px; margin: 0 auto; }
+.philosophy-quote {
+  font-size: 24px; font-weight: 600; line-height: 1.5; margin-bottom: 16px;
+}
+.philosophy-quote .accent { color: var(--accent); }
+.philosophy-attr { font-size: 14px; color: var(--text-2); }
+
+/* ── Capabilities ─────────────────────────────────────────────── */
+.cap-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.cap-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 28px 24px; transition: all var(--transition);
+}
+.cap-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: var(--shadow); }
+.cap-icon { font-size: 28px; margin-bottom: 14px; }
+.cap-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.cap-desc { font-size: 13px; color: var(--text-1); line-height: 1.6; }
+
+/* ── Featured Projects ────────────────────────────────────────── */
+.projects-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.proj-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 28px 24px; transition: all var(--transition); position: relative;
+}
+.proj-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: var(--shadow); }
+.proj-card.featured { border-top: 3px solid var(--accent); }
+.proj-year {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 12px; background: var(--accent-glow); color: var(--accent); margin-bottom: 12px;
+}
+.proj-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.proj-sub { font-size: 12px; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+.proj-desc { font-size: 13px; color: var(--text-1); line-height: 1.5; margin-bottom: 16px; }
+.proj-metrics { display: flex; gap: 16px; flex-wrap: wrap; }
+.proj-metric { text-align: center; }
+.proj-metric-val { font-size: 20px; font-weight: 800; color: var(--accent); display: block; }
+.proj-metric-lbl { font-size: 10px; color: var(--text-2); }
+
+/* ── Testimonials ─────────────────────────────────────────────── */
+.testimonials-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.test-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 28px 24px; transition: all var(--transition); display: flex; flex-direction: column;
+}
+.test-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: var(--shadow); }
+.test-quote {
+  font-size: 14px; color: var(--text-1); line-height: 1.7; flex: 1;
+  font-style: italic; margin-bottom: 20px; position: relative; padding-left: 20px;
+}
+.test-quote::before {
+  content: '\201C'; position: absolute; left: 0; top: -4px;
+  font-size: 32px; color: var(--accent); font-style: normal; line-height: 1;
+}
+.test-author { display: flex; align-items: center; gap: 12px; }
+.test-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--accent-glow);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: var(--accent);
+}
+.test-name { font-size: 13px; font-weight: 700; }
+.test-role { font-size: 11px; color: var(--text-2); }
+
+/* ── Blog Insights ────────────────────────────────────────────── */
+.blog-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+}
+.blog-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 28px 24px; transition: all var(--transition); display: block;
+}
+.blog-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--shadow); }
+.blog-card-meta { font-size: 11px; color: var(--text-2); margin-bottom: 10px; }
+.blog-card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+.blog-card-excerpt { font-size: 13px; color: var(--text-1); line-height: 1.6; margin-bottom: 14px; }
+.blog-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.blog-tag {
+  padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 600;
+  background: var(--tag-bg); color: var(--tag-text);
+}
+.blog-card-link {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+  color: var(--accent); margin-top: 12px;
+}
+
+/* ── Publications & Speaking ──────────────────────────────────── */
+.pub-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+}
+.pub-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; transition: all var(--transition);
+}
+.pub-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+.pub-icon { font-size: 20px; margin-bottom: 10px; }
+.pub-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+.pub-desc { font-size: 13px; color: var(--text-1); line-height: 1.5; }
+
+/* ── Contact ──────────────────────────────────────────────────── */
+.contact-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;
+}
+.contact-text { font-size: 15px; color: var(--text-1); line-height: 1.7; margin-bottom: 24px; }
+.contact-items { display: flex; flex-direction: column; gap: 16px; }
+.contact-item {
+  display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  transition: all var(--transition);
+}
+.contact-item:hover { border-color: var(--accent); transform: translateX(4px); }
+.contact-item-icon { font-size: 20px; }
+.contact-item-label { font-size: 12px; color: var(--text-2); }
+.contact-item-value { font-size: 14px; font-weight: 600; }
+.contact-item-value a { color: var(--accent); }
+
+.contact-highlights {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 32px; text-align: center;
+}
+.contact-highlights h3 { font-size: 18px; font-weight: 700; margin-bottom: 24px; }
+.contact-highlights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.ch-item {}
+.ch-number { font-size: 28px; font-weight: 800; color: var(--accent); display: block; }
+.ch-label { font-size: 12px; color: var(--text-2); }
+
+/* ── Divider ──────────────────────────────────────────────────── */
+.divider {
+  max-width: var(--max-w); margin: 0 auto;
+  border: none; border-top: 1px solid var(--border);
+}
+
+/* ── Bento Dashboard (preserved) ──────────────────────────────── */
+.dashboard-section { padding: 60px 24px 80px; }
+.dashboard-inner { max-width: var(--max-w); margin: 0 auto; }
+.dashboard-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px;
+}
 .bento {
-  max-width: var(--max-w); margin: 0 auto; padding: 20px 24px 60px;
-  display: grid; gap: 16px;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: auto;
+  display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); grid-auto-rows: auto;
 }
-
-/* Card base */
 .card {
   background: var(--bg-card); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 24px;
@@ -130,12 +383,8 @@ a { color: inherit; text-decoration: none; }
   font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-left: auto;
   background: var(--accent-glow); color: var(--accent); font-weight: 500;
 }
-
-/* ── Quick Links Card (span 2 cols) ────────────────────────────── */
 .card-quick { grid-column: span 2; }
-.quick-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-}
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .quick-link {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   padding: 16px 8px; border-radius: var(--radius-sm);
@@ -145,8 +394,6 @@ a { color: inherit; text-decoration: none; }
 .quick-link:hover { border-color: var(--accent); background: var(--accent-glow); transform: translateY(-2px); }
 .quick-link-icon { font-size: 24px; }
 .quick-link-label { font-size: 11px; font-weight: 500; color: var(--text-1); }
-
-/* ── Bookmarks Card ────────────────────────────────────────────── */
 .card-bookmarks { background: linear-gradient(135deg, var(--bg-card), var(--accent-glow)); }
 .bookmarks-count { font-size: 36px; font-weight: 800; color: var(--accent); line-height: 1; }
 .bookmarks-label { font-size: 13px; color: var(--text-1); margin-top: 4px; }
@@ -157,8 +404,6 @@ a { color: inherit; text-decoration: none; }
   transition: all var(--transition);
 }
 .bookmarks-cta:hover { transform: scale(1.03); box-shadow: 0 4px 16px rgba(108,99,255,0.3); }
-
-/* ── Projects Card ─────────────────────────────────────────────── */
 .card-projects { grid-column: span 2; }
 .project-list { display: flex; flex-direction: column; gap: 8px; }
 .project-item {
@@ -171,9 +416,6 @@ a { color: inherit; text-decoration: none; }
 .project-info { flex: 1; min-width: 0; }
 .project-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .project-desc { font-size: 11px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.project-stars { font-size: 11px; color: var(--text-2); flex-shrink: 0; }
-
-/* ── Blog Card ─────────────────────────────────────────────────── */
 .blog-list { display: flex; flex-direction: column; gap: 8px; }
 .blog-item {
   display: flex; align-items: center; gap: 10px;
@@ -183,34 +425,27 @@ a { color: inherit; text-decoration: none; }
 .blog-item:hover { background: var(--accent-glow); }
 .blog-icon { font-size: 16px; flex-shrink: 0; }
 .blog-label { font-size: 13px; font-weight: 500; flex: 1; }
-.blog-tag { font-size: 10px; color: var(--text-2); padding: 2px 8px; background: var(--bg-card); border-radius: 10px; }
-
-/* ── Tools Card ────────────────────────────────────────────────── */
-.tools-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+.blog-item .blog-tag-sm {
+  font-size: 10px; color: var(--text-2); padding: 2px 8px; background: var(--bg-card); border-radius: 10px;
 }
+.tools-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tool-item {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 12px 8px; border-radius: var(--radius-sm);
-  background: var(--tag-bg); transition: all var(--transition); cursor: pointer;
-  text-align: center;
+  background: var(--tag-bg); transition: all var(--transition); cursor: pointer; text-align: center;
 }
 .tool-item:hover { background: var(--accent-glow); transform: translateY(-2px); }
 .tool-icon { font-size: 22px; }
 .tool-label { font-size: 10px; color: var(--text-1); font-weight: 500; }
-
-/* ── Social Card ───────────────────────────────────────────────── */
-.social-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-.social-link {
+.social-grid-bento { display: flex; flex-wrap: wrap; gap: 8px; }
+.social-link-bento {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 16px; border-radius: var(--radius-sm);
   background: var(--tag-bg); border: 1px solid transparent;
   transition: all var(--transition); cursor: pointer; font-size: 13px; font-weight: 500;
 }
-.social-link:hover { border-color: var(--accent); background: var(--accent-glow); }
-.social-icon { font-size: 16px; }
-
-/* ── Skills Card ───────────────────────────────────────────────── */
+.social-link-bento:hover { border-color: var(--accent); background: var(--accent-glow); }
+.social-icon-bento { font-size: 16px; }
 .skills-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
 .skill-tag {
   padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
@@ -219,8 +454,6 @@ a { color: inherit; text-decoration: none; }
 }
 .skill-tag:hover { border-color: var(--accent); color: var(--accent); }
 .skill-tag.highlight { background: var(--accent-glow); color: var(--accent); border-color: rgba(108,99,255,0.2); }
-
-/* ── Learning Card ─────────────────────────────────────────────── */
 .learning-list { display: flex; flex-direction: column; gap: 8px; }
 .learning-item {
   display: flex; align-items: center; gap: 10px;
@@ -234,347 +467,796 @@ a { color: inherit; text-decoration: none; }
 .status-active { background: rgba(0,212,170,0.15); color: var(--accent-2); }
 .status-done { background: var(--tag-bg); color: var(--text-2); }
 
-/* ── Footer ────────────────────────────────────────────────────── */
+/* ── Footer ───────────────────────────────────────────────────── */
 .footer {
-  max-width: var(--max-w); margin: 0 auto; padding: 20px 24px 40px;
-  text-align: center; font-size: 12px; color: var(--text-2);
+  text-align: center; padding: 40px 24px; font-size: 12px; color: var(--text-2);
   border-top: 1px solid var(--border);
 }
+.footer a { color: var(--accent); }
+.footer-links { display: flex; justify-content: center; gap: 20px; margin-top: 12px; }
+.footer-links a { color: var(--text-2); font-size: 18px; transition: color var(--transition); }
+.footer-links a:hover { color: var(--accent); }
 
-/* ── Responsive ────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .bento { grid-template-columns: repeat(2, 1fr); }
-  .card-quick { grid-column: span 2; }
-  .card-projects { grid-column: span 2; }
-  .quick-grid { grid-template-columns: repeat(4, 1fr); }
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 40px; }
+  .hero-desc { margin-left: auto; margin-right: auto; }
+  .hero-btns { justify-content: center; }
+  .hero-socials { justify-content: center; }
+  .hero-image { order: -1; }
+  .hero-image img { width: 260px; height: 260px; }
+  .pillars-grid { grid-template-columns: repeat(2, 1fr); }
+  .cap-grid { grid-template-columns: repeat(2, 1fr); }
+  .projects-grid { grid-template-columns: repeat(2, 1fr); }
+  .testimonials-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
 }
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-mobile { display: block; }
+  .nav-links.open {
+    display: flex; flex-direction: column; position: absolute;
+    top: 100%; left: 0; right: 0; background: var(--bg-glass);
+    backdrop-filter: blur(20px); padding: 16px 24px; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero h1 { font-size: 36px; }
+  .hero-tagline { font-size: 15px; }
+  .section-title { font-size: 28px; }
+  .pillars-grid, .cap-grid, .projects-grid, .blog-grid, .pub-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .contact-grid { grid-template-columns: 1fr; }
   .bento { grid-template-columns: 1fr; }
   .card-quick, .card-projects { grid-column: span 1; }
   .quick-grid { grid-template-columns: repeat(2, 1fr); }
-  .tools-grid { grid-template-columns: repeat(3, 1fr); }
-  .greeting { font-size: 22px; }
-  .hero { padding: 24px 16px 12px; }
-  .bento { padding: 12px 16px 40px; }
 }
 
-/* ── Animations ────────────────────────────────────────────────── */
+/* ── Animations ───────────────────────────────────────────────── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.card { animation: fadeUp 0.5s ease forwards; opacity: 0; }
-.card:nth-child(1) { animation-delay: 0.05s; }
-.card:nth-child(2) { animation-delay: 0.1s; }
-.card:nth-child(3) { animation-delay: 0.15s; }
-.card:nth-child(4) { animation-delay: 0.2s; }
-.card:nth-child(5) { animation-delay: 0.25s; }
-.card:nth-child(6) { animation-delay: 0.3s; }
-.card:nth-child(7) { animation-delay: 0.35s; }
-.card:nth-child(8) { animation-delay: 0.4s; }
+.animate-on-scroll { opacity: 0; transform: translateY(24px); transition: all 0.6s ease; }
+.animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<header class="header">
-  <div class="header-inner">
-    <div class="header-left">
-      <img class="avatar" src="https://avatars.githubusercontent.com/u/50418172?v=4" alt="Shailesh Mishra">
-      <div>
-        <div class="header-name">Shailesh Mishra</div>
-        <div class="header-role">Chief Dev Advisor · Microsoft</div>
+<!-- ═══ Navigation ═══ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-left">
+      <img class="nav-avatar" src="https://avatars.githubusercontent.com/u/50418172?v=4" alt="Shailesh Mishra">
+      <span class="nav-name">Shailesh Mishra</span>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="#home" class="active">Home</a>
+      <a href="#focus">Focus</a>
+      <a href="#projects">Projects</a>
+      <a href="#testimonials">Testimonials</a>
+      <a href="#insights">Blog</a>
+      <a href="portfolio.html">Portfolio</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-icon" id="btnTheme" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <button class="nav-mobile" id="navToggle" onclick="toggleNav()" aria-label="Menu">☰</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ Hero ═══ -->
+<section id="home" class="hero">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-label">✦ Chief Dev Advisor · Microsoft Asia</div>
+      <h1>Shailesh<br><span class="accent">Mishra</span></h1>
+      <p class="hero-tagline">Chief Dev Advisor at Microsoft Asia (AI, Data & Cloud Transformation) | ex-AWS, Google | 22+ Years in Enterprise Technology</p>
+      <p class="hero-desc">I work on complex, high-impact problems at the intersection of AI, Data, and large-scale cloud transformation. Helping enterprises modernize platforms, scale AI responsibly, and translate executive intent into production-ready architectures.</p>
+      <div class="hero-btns">
+        <a href="#focus" class="btn-primary">Explore My Work →</a>
+        <a href="#contact" class="btn-secondary">Get In Touch</a>
+        <a href="portfolio.html" class="btn-secondary">Full Portfolio</a>
+      </div>
+      <div class="hero-socials">
+        <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" title="LinkedIn">
+          <svg viewBox="0 0 24 24"><path d="M20.5 2h-17A1.5 1.5 0 002 3.5v17A1.5 1.5 0 003.5 22h17a1.5 1.5 0 001.5-1.5v-17A1.5 1.5 0 0020.5 2zM8 19H5v-9h3zM6.5 8.25A1.75 1.75 0 118.3 6.5a1.78 1.78 0 01-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0013 14.19a.66.66 0 000 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 012.7-1.4c1.55 0 3.36.86 3.36 3.66z"/></svg>
+        </a>
+        <a href="https://github.com/sendtoshailesh" target="_blank" title="GitHub">
+          <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        </a>
+        <a href="https://medium.com/@shaileshkumarmishra" target="_blank" title="Medium">
+          <svg viewBox="0 0 24 24"><path d="M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42 3.38 2.88 3.38 6.42M24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/></svg>
+        </a>
+        <a href="https://x.com/sendtoshailesh" target="_blank" title="X / Twitter">
+          <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+        <a href="mailto:sendtoshailesh@gmail.com" title="Email">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </a>
       </div>
     </div>
-    <div class="header-actions">
-      <span class="clock" id="clock"></span>
-      <button class="btn-icon" id="btnTheme" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    <div class="hero-image">
+      <img src="https://avatars.githubusercontent.com/u/50418172?v=4" alt="Shailesh Mishra">
     </div>
   </div>
-</header>
-
-<!-- Hero -->
-<section class="hero">
-  <div class="greeting">
-    <span class="greeting-emoji">👋</span> <span id="greetingText">Hello</span>, Shailesh
-  </div>
-  <p class="greeting-sub">Your personal command center — everything in one place.</p>
 </section>
 
-<!-- Bento Grid -->
-<main class="bento">
-
-  <!-- 1. Quick Links (2 cols) -->
-  <div class="card card-quick">
-    <div class="card-header">
-      <span class="card-icon">📌</span>
-      <span class="card-title">Quick Links</span>
+<!-- ═══ Stats Strip ═══ -->
+<div class="stats-strip">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <span class="stat-number">22+</span>
+      <span class="stat-label">Years Experience</span>
     </div>
-    <div class="quick-grid">
-      <a href="portfolio.html" class="quick-link">
-        <span class="quick-link-icon">👤</span>
-        <span class="quick-link-label">Portfolio</span>
-      </a>
-      <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="quick-link">
-        <span class="quick-link-icon">💼</span>
-        <span class="quick-link-label">LinkedIn</span>
-      </a>
-      <a href="https://github.com/sendtoshailesh" target="_blank" class="quick-link">
-        <span class="quick-link-icon">🐙</span>
-        <span class="quick-link-label">GitHub</span>
-      </a>
-      <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="quick-link">
-        <span class="quick-link-icon">✍️</span>
-        <span class="quick-link-label">Medium</span>
-      </a>
-      <a href="mailto:sendtoshailesh@gmail.com" class="quick-link">
-        <span class="quick-link-icon">📧</span>
-        <span class="quick-link-label">Email</span>
-      </a>
-      <a href="https://x.com/sendtoshailesh" target="_blank" class="quick-link">
-        <span class="quick-link-icon">🐦</span>
-        <span class="quick-link-label">X / Twitter</span>
-      </a>
-      <a href="https://sendtoshailesh.github.io/my-bookmarks/" target="_blank" class="quick-link">
-        <span class="quick-link-icon">🔖</span>
-        <span class="quick-link-label">Bookmarks</span>
-      </a>
-      <a href="https://github.com/sendtoshailesh?tab=repositories" target="_blank" class="quick-link">
-        <span class="quick-link-icon">📂</span>
-        <span class="quick-link-label">All Repos</span>
-      </a>
+    <div class="stat-item">
+      <span class="stat-number">7</span>
+      <span class="stat-label">Major Companies</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">75PB</span>
+      <span class="stat-label">Data Migrated</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">500+</span>
+      <span class="stat-label">Professionals Trained</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">99.9%</span>
+      <span class="stat-label">Peak Uptime</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-number">₹500Cr+</span>
+      <span class="stat-label">Business Value</span>
     </div>
   </div>
+</div>
 
-  <!-- 2. Bookmarks -->
-  <div class="card card-bookmarks">
-    <div class="card-header">
-      <span class="card-icon">🔖</span>
-      <span class="card-title">Bookmarks</span>
+<!-- ═══ Focus Pillars ═══ -->
+<section id="focus" class="section section-alt">
+  <div class="section-inner">
+    <div class="section-label">✦ FOCUS AREAS</div>
+    <h2 class="section-title">Deep Expertise Across Four Pillars</h2>
+    <p class="section-subtitle">Field-tested knowledge from building and leading at Microsoft, AWS, Google, Oracle, and IBM across regulated and mission-critical environments.</p>
+    <div class="pillars-grid">
+      <div class="pillar-card animate-on-scroll">
+        <div class="pillar-icon">🧠</div>
+        <div class="pillar-label">AI & GENAI</div>
+        <div class="pillar-title">AI & Generative AI</div>
+        <p class="pillar-desc">LLM evaluation, Agentic apps, MCP servers, GitHub Copilot, Microsoft AI Foundry, RAG architectures, and production AI systems that survive real-world deployment.</p>
+      </div>
+      <div class="pillar-card animate-on-scroll">
+        <div class="pillar-icon">☁️</div>
+        <div class="pillar-label">CLOUD ARCHITECTURE</div>
+        <div class="pillar-title">Cloud & Enterprise Architecture</div>
+        <p class="pillar-desc">Multi-cloud expertise across Azure, AWS, and GCP. Enterprise migrations, serverless computing, containerization, microservices, and Well-Architected solutions.</p>
+      </div>
+      <div class="pillar-card animate-on-scroll">
+        <div class="pillar-icon">🗄️</div>
+        <div class="pillar-label">DATA ENGINEERING</div>
+        <div class="pillar-title">Data & Database Engineering</div>
+        <p class="pillar-desc">75PB+ migrations, PostgreSQL, Oracle, Aurora, DynamoDB, BigQuery, Kafka, Debezium. Performance tuning, schema design, and data platform modernization at scale.</p>
+      </div>
+      <div class="pillar-card animate-on-scroll">
+        <div class="pillar-icon">🎯</div>
+        <div class="pillar-label">TECHNICAL LEADERSHIP</div>
+        <div class="pillar-title">Technical Leadership & Advisory</div>
+        <p class="pillar-desc">C-Suite engagement, team building, SDLC transformation with AI, executive technology advisory, and translating business goals into production-ready execution plans.</p>
+      </div>
     </div>
-    <div class="bookmarks-count">1,442</div>
-    <div class="bookmarks-label">saved bookmarks from Chrome & Edge</div>
-    <a href="https://sendtoshailesh.github.io/my-bookmarks/" class="bookmarks-cta">
-      Open Bookmarks App →
-    </a>
   </div>
+</section>
 
-  <!-- 3. Projects (2 cols) -->
-  <div class="card card-projects">
-    <div class="card-header">
-      <span class="card-icon">🚀</span>
-      <span class="card-title">Featured Projects</span>
-      <a href="https://github.com/sendtoshailesh?tab=repositories" target="_blank" class="card-badge">View All →</a>
+<!-- ═══ Philosophy ═══ -->
+<div class="philosophy">
+  <div class="philosophy-inner">
+    <div class="section-label">✦ APPROACH</div>
+    <p class="philosophy-quote"><span class="accent">Execution over theory:</span> Architecture that works at scale. AI systems that survive production realities. Cloud transformations grounded in security, cost, and operational constraints.</p>
+    <p class="philosophy-attr">— The principle behind 22+ years of building and shipping</p>
+  </div>
+</div>
+
+<!-- ═══ Leadership Capabilities ═══ -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-label">✦ CAPABILITIES</div>
+    <h2 class="section-title">Leadership Backed by Execution</h2>
+    <p class="section-subtitle">Translating deep technical expertise into measurable business impact across enterprises and hyperscalers.</p>
+    <div class="cap-grid">
+      <div class="cap-card animate-on-scroll">
+        <div class="cap-icon">🗺️</div>
+        <div class="cap-title">Strategic AI Roadmaps</div>
+        <p class="cap-desc">Developing actionable strategies that align technology initiatives with core business objectives. Every investment is architected to drive long-term value.</p>
+      </div>
+      <div class="cap-card animate-on-scroll">
+        <div class="cap-icon">🚀</div>
+        <div class="cap-title">From Pilot to Production</div>
+        <p class="cap-desc">Moving organizations beyond proof-of-concept by operationalizing AI/ML solutions at enterprise scale. Building robust, reliable systems for real-world deployment.</p>
+      </div>
+      <div class="cap-card animate-on-scroll">
+        <div class="cap-icon">📊</div>
+        <div class="cap-title">Focus on Business Outcomes</div>
+        <p class="cap-desc">Moving beyond technical metrics to deliver measurable business impact: revenue growth, operational efficiency, and enhanced market position.</p>
+      </div>
+      <div class="cap-card animate-on-scroll">
+        <div class="cap-icon">👥</div>
+        <div class="cap-title">High-Performing Teams</div>
+        <p class="cap-desc">Building and mentoring world-class engineering teams. Fostering innovation, accountability, and excellence to attract and retain top-tier talent.</p>
+      </div>
+      <div class="cap-card animate-on-scroll">
+        <div class="cap-icon">🔗</div>
+        <div class="cap-title">Bridging Tech & Business</div>
+        <p class="cap-desc">Translating complex technical concepts into clear business language. Enabling executive teams and boards to make informed, confident decisions.</p>
+      </div>
+      <div class="cap-card animate-on-scroll">
+        <div class="cap-icon">🔮</div>
+        <div class="cap-title">Future-Focused Insights</div>
+        <p class="cap-desc">Forward-looking analysis on emerging AI and cloud trends. Helping organizations anticipate market shifts, mitigate risks, and seize opportunities.</p>
+      </div>
     </div>
-    <div class="project-list" id="projectList">
-      <a href="https://github.com/sendtoshailesh/my-bookmarks" target="_blank" class="project-item">
-        <span class="project-emoji">🔖</span>
-        <div class="project-info">
-          <div class="project-name">my-bookmarks</div>
-          <div class="project-desc">Git-based bookmark manager with web UI</div>
+  </div>
+</section>
+
+<!-- ═══ Featured Projects ═══ -->
+<section id="projects" class="section section-alt">
+  <div class="section-inner">
+    <div class="section-label">✦ IMPACT</div>
+    <h2 class="section-title">Featured Projects & Achievements</h2>
+    <p class="section-subtitle">Enterprise-scale initiatives that moved the needle on business outcomes.</p>
+    <div class="projects-grid">
+      <div class="proj-card featured animate-on-scroll">
+        <span class="proj-year">2024-25</span>
+        <div class="proj-title">AI-DLC Unicorn Gym</div>
+        <div class="proj-sub">Inducing AI methodology into SDLC</div>
+        <p class="proj-desc">Led AWS's groundbreaking initiative to revolutionize Software Development Life Cycle through AI integration.</p>
+        <div class="proj-metrics">
+          <div class="proj-metric"><span class="proj-metric-val">92%</span><span class="proj-metric-lbl">SDLC Reduction</span></div>
+          <div class="proj-metric"><span class="proj-metric-val">500+</span><span class="proj-metric-lbl">Trained</span></div>
+        </div>
+      </div>
+      <div class="proj-card featured animate-on-scroll">
+        <span class="proj-year">2016-19</span>
+        <div class="proj-title">Rolling Stone Migration</div>
+        <div class="proj-sub">Amazon e-commerce to AWS</div>
+        <p class="proj-desc">Led migration of Amazon's e-commerce tech stack from Oracle to AWS NoSQL, managing massive data volumes with zero downtime.</p>
+        <div class="proj-metrics">
+          <div class="proj-metric"><span class="proj-metric-val">75PB</span><span class="proj-metric-lbl">Data</span></div>
+          <div class="proj-metric"><span class="proj-metric-val">7,500</span><span class="proj-metric-lbl">DBs</span></div>
+          <div class="proj-metric"><span class="proj-metric-val">60%</span><span class="proj-metric-lbl">Cost Cut</span></div>
+        </div>
+      </div>
+      <div class="proj-card animate-on-scroll">
+        <span class="proj-year">2024</span>
+        <div class="proj-title">GenAI Chat Advisory</div>
+        <p class="proj-desc">Designed GenAI-powered chat advisory application for Asset Management Companies.</p>
+        <div class="proj-metrics">
+          <div class="proj-metric"><span class="proj-metric-val">75%</span><span class="proj-metric-lbl">Faster</span></div>
+          <div class="proj-metric"><span class="proj-metric-val">₹500Cr+</span><span class="proj-metric-lbl">AUM</span></div>
+        </div>
+      </div>
+      <div class="proj-card animate-on-scroll">
+        <span class="proj-year">2021, 2023</span>
+        <div class="proj-title">IPO Listing Platform</div>
+        <p class="proj-desc">Rapid-scale serverless infrastructure for stock market IPO listings.</p>
+        <div class="proj-metrics">
+          <div class="proj-metric"><span class="proj-metric-val">100K+</span><span class="proj-metric-lbl">Concurrent</span></div>
+          <div class="proj-metric"><span class="proj-metric-val">99.999%</span><span class="proj-metric-lbl">Uptime</span></div>
+        </div>
+      </div>
+      <div class="proj-card animate-on-scroll">
+        <span class="proj-year">2024</span>
+        <div class="proj-title">GenAI Production Support</div>
+        <p class="proj-desc">GenAI chatbot to automate routine support tasks and improve team efficiency.</p>
+        <div class="proj-metrics">
+          <div class="proj-metric"><span class="proj-metric-val">93%</span><span class="proj-metric-lbl">Faster</span></div>
+          <div class="proj-metric"><span class="proj-metric-val">40%</span><span class="proj-metric-lbl">Efficiency</span></div>
+        </div>
+      </div>
+      <div class="proj-card animate-on-scroll">
+        <span class="proj-year">2025</span>
+        <div class="proj-title">India FSI Air-Gapped Solutions</div>
+        <p class="proj-desc">Architected air-gap solution for Indian Financial Services to meet regulatory requirements.</p>
+        <div class="proj-metrics">
+          <div class="proj-metric"><span class="proj-metric-val">100%</span><span class="proj-metric-lbl">Compliance</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Testimonials ═══ -->
+<section id="testimonials" class="section">
+  <div class="section-inner">
+    <div class="section-label">✦ TESTIMONIALS</div>
+    <h2 class="section-title">What Industry Leaders Say</h2>
+    <p class="section-subtitle">Trusted by technology leaders, engineering executives, and enterprise clients.</p>
+    <div class="testimonials-grid">
+      <div class="test-card animate-on-scroll">
+        <p class="test-quote">I have collaborated closely with Shailesh in my AWS days for Fintech customers; he has deep insights on the AWS platform, ability to leverage the services to address new features, performance and scale with minimal cost. He has a skill to understand customer context and explain technology in ways customer can consume. It was great working with Shailesh in creating customer success through resilient design and implementation.</p>
+        <div class="test-author">
+          <div class="test-avatar">LK</div>
+          <div>
+            <div class="test-name">Lini B Karanath</div>
+            <div class="test-role">Head Solutions & Engineering - Data & AI @ Celebal Technologies</div>
+          </div>
+        </div>
+      </div>
+      <div class="test-card animate-on-scroll">
+        <p class="test-quote">Shailesh, as a Cloud Database Specialist, was a great asset to my team. He brought solid experience in implementing complex database migrations and was looked upon as a trusted advisor by our customers. He was also a very driven learner, who upskills himself quickly - a big plus in a rapidly evolving tech landscape. Wishing you continued success, Shailesh!</p>
+        <div class="test-author">
+          <div class="test-avatar">SR</div>
+          <div>
+            <div class="test-name">Seema Ramachandra</div>
+            <div class="test-role">Specialist Customer Engineering Leader - Data, Analytics, AI @ Google</div>
+          </div>
+        </div>
+      </div>
+      <div class="test-card animate-on-scroll">
+        <p class="test-quote">I had the privilege of collaborating with Shailesh on transformative modernization projects, including the xAlt initiative, a pioneering AIF platform. His deep-seated expertise in database architecture and cloud technologies was instrumental. His unique ability to bridge the gap between technical excellence and business acumen was a key differentiator.</p>
+        <div class="test-author">
+          <div class="test-avatar">RM</div>
+          <div>
+            <div class="test-name">Rajesh Majji</div>
+            <div class="test-role">VP Product & Technology, MaxisAI | Ex-KFinTech</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top: 32px;">
+      <a href="https://www.linkedin.com/in/shaileshmishra1/details/recommendations/" target="_blank" class="btn-secondary" style="display:inline-flex;">More on LinkedIn →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Latest Insights (Blog) ═══ -->
+<section id="insights" class="section section-alt">
+  <div class="section-inner">
+    <div class="section-label">✦ INSIGHTS</div>
+    <h2 class="section-title">Latest Published Insights</h2>
+    <p class="section-subtitle">Technical deep-dives, case studies, and field notes from working with customers on cloud and database engineering.</p>
+    <div class="blog-grid">
+      <a href="blog/postgresql-explain-buffers-case-study.html" class="blog-card animate-on-scroll">
+        <div class="blog-card-meta">April 26, 2026 · 12 min read</div>
+        <div class="blog-card-title">PostgreSQL EXPLAIN BUFFERS: How We Cut Checkout Latency 96%</div>
+        <p class="blog-card-excerpt">A real-world e-commerce case study: one word added to EXPLAIN ANALYZE diagnosed a checkout regression from 50ms to 1.2s that three days of network debugging missed.</p>
+        <div class="blog-card-tags">
+          <span class="blog-tag">postgresql</span>
+          <span class="blog-tag">performance</span>
+          <span class="blog-tag">case-study</span>
         </div>
       </a>
-      <a href="https://github.com/sendtoshailesh/content-creation" target="_blank" class="project-item">
-        <span class="project-emoji">📝</span>
-        <div class="project-info">
-          <div class="project-name">content-creation</div>
-          <div class="project-desc">Workflow to create content from idea</div>
+      <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="blog-card animate-on-scroll">
+        <div class="blog-card-meta">Ongoing</div>
+        <div class="blog-card-title">Medium Articles</div>
+        <p class="blog-card-excerpt">Regular technical writings on cloud architecture, database engineering, AI/ML, and enterprise technology on Medium and Dev Genius.</p>
+        <div class="blog-card-tags">
+          <span class="blog-tag">medium</span>
+          <span class="blog-tag">cloud</span>
+          <span class="blog-tag">data</span>
         </div>
+        <span class="blog-card-link">Read on Medium →</span>
       </a>
-      <a href="https://github.com/sendtoshailesh/my-RAG-experiments" target="_blank" class="project-item">
-        <span class="project-emoji">🤖</span>
-        <div class="project-info">
-          <div class="project-name">my-RAG-experiments</div>
-          <div class="project-desc">RAG experiments and AI prototypes</div>
+      <a href="https://developers.google.com/profile/u/sendtoshailesh" target="_blank" class="blog-card animate-on-scroll">
+        <div class="blog-card-meta">Contributor</div>
+        <div class="blog-card-title">Google Dev Library</div>
+        <p class="blog-card-excerpt">Technical content and best practices contributed to Google's developer resources on cloud, data, and database topics.</p>
+        <div class="blog-card-tags">
+          <span class="blog-tag">google</span>
+          <span class="blog-tag">dev-library</span>
         </div>
+        <span class="blog-card-link">View Profile →</span>
       </a>
-      <a href="https://github.com/sendtoshailesh/postgres-data-masking-anonymization" target="_blank" class="project-item">
-        <span class="project-emoji">🔒</span>
-        <div class="project-info">
-          <div class="project-name">postgres-data-masking</div>
-          <div class="project-desc">Data masking & anonymization in PostgreSQL</div>
+    </div>
+    <div style="text-align:center; margin-top: 32px;">
+      <a href="blog/" class="btn-primary" style="display:inline-flex;">View All Posts →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Publications & Speaking ═══ -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-label">✦ THOUGHT LEADERSHIP</div>
+    <h2 class="section-title">Publications & Speaking</h2>
+    <p class="section-subtitle">Sharing knowledge through official blogs, conferences, and technical communities.</p>
+    <div class="pub-grid">
+      <div class="pub-card animate-on-scroll">
+        <div class="pub-icon">🎤</div>
+        <div class="pub-title">AWS Summit — Keynote Speaker</div>
+        <p class="pub-desc">Keynote speaker on cloud architecture and AI/ML solutions at AWS Summit events.</p>
+      </div>
+      <div class="pub-card animate-on-scroll">
+        <div class="pub-icon">🐘</div>
+        <div class="pub-title">PostgreSQL Group Meetup</div>
+        <p class="pub-desc">Technical presentations on database optimization, migration strategies, and performance tuning.</p>
+      </div>
+      <div class="pub-card animate-on-scroll">
+        <div class="pub-icon">📝</div>
+        <div class="pub-title">AWS & Google Cloud Official Blogs</div>
+        <p class="pub-desc">Authored multiple official blogs on database management, migration strategies, and cloud best practices.</p>
+      </div>
+      <div class="pub-card animate-on-scroll">
+        <div class="pub-icon">📡</div>
+        <div class="pub-title">Technical Conferences & Webcasts</div>
+        <p class="pub-desc">Regular contributor to seminars, webinars, AWS User Group events, and industry conferences.</p>
+      </div>
+      <div class="pub-card animate-on-scroll">
+        <div class="pub-icon">📰</div>
+        <div class="pub-title">Configuring Audit Log for Amazon RDS</div>
+        <p class="pub-desc">Comprehensive guide on capturing database activities for Amazon RDS for MySQL and Amazon Aurora.</p>
+      </div>
+      <div class="pub-card animate-on-scroll">
+        <div class="pub-icon">🔒</div>
+        <div class="pub-title">Secure Google Cloud SQL Instances</div>
+        <p class="pub-desc">Best practices for using Private IP with Cloud SQL: gotchas and troubleshooting techniques.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Contact ═══ -->
+<section id="contact" class="section section-alt">
+  <div class="section-inner">
+    <div class="section-label">✦ CONNECT</div>
+    <h2 class="section-title">Get In Touch</h2>
+    <p class="section-subtitle">Always interested in strategic technology discussions, cloud architecture consultations, and AI/ML collaborations.</p>
+    <div class="contact-grid">
+      <div>
+        <p class="contact-text">Let's connect and explore opportunities to drive innovation together. Whether it's enterprise modernization, AI strategy, or scaling cloud platforms — I'm happy to discuss.</p>
+        <div class="contact-items">
+          <div class="contact-item">
+            <span class="contact-item-icon">📍</span>
+            <div>
+              <div class="contact-item-label">Location</div>
+              <div class="contact-item-value">Hyderabad, Telangana, India</div>
+            </div>
+          </div>
+          <a href="mailto:sendtoshailesh@gmail.com" class="contact-item">
+            <span class="contact-item-icon">📧</span>
+            <div>
+              <div class="contact-item-label">Email</div>
+              <div class="contact-item-value"><span style="color:var(--accent)">sendtoshailesh@gmail.com</span></div>
+            </div>
+          </a>
+          <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="contact-item">
+            <span class="contact-item-icon">💼</span>
+            <div>
+              <div class="contact-item-label">LinkedIn</div>
+              <div class="contact-item-value"><span style="color:var(--accent)">linkedin.com/in/shaileshmishra1</span></div>
+            </div>
+          </a>
+          <a href="https://github.com/sendtoshailesh" target="_blank" class="contact-item">
+            <span class="contact-item-icon">🐙</span>
+            <div>
+              <div class="contact-item-label">GitHub</div>
+              <div class="contact-item-value"><span style="color:var(--accent)">github.com/sendtoshailesh</span></div>
+            </div>
+          </a>
+          <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="contact-item">
+            <span class="contact-item-icon">✍️</span>
+            <div>
+              <div class="contact-item-label">Medium</div>
+              <div class="contact-item-value"><span style="color:var(--accent)">medium.com/@shaileshkumarmishra</span></div>
+            </div>
+          </a>
         </div>
-      </a>
-      <a href="https://github.com/sendtoshailesh/ai-sdlc-pro" target="_blank" class="project-item">
-        <span class="project-emoji">⚡</span>
-        <div class="project-info">
-          <div class="project-name">ai-sdlc-pro</div>
-          <div class="project-desc">AI-powered SDLC automation</div>
+      </div>
+      <div class="contact-highlights">
+        <h3>Professional Highlights</h3>
+        <div class="contact-highlights-grid">
+          <div class="ch-item">
+            <span class="ch-number">22+</span>
+            <span class="ch-label">Years Experience</span>
+          </div>
+          <div class="ch-item">
+            <span class="ch-number">500+</span>
+            <span class="ch-label">Professionals Trained</span>
+          </div>
+          <div class="ch-item">
+            <span class="ch-number">75PB</span>
+            <span class="ch-label">Data Migrated</span>
+          </div>
+          <div class="ch-item">
+            <span class="ch-number">₹500Cr+</span>
+            <span class="ch-label">Business Impact</span>
+          </div>
         </div>
-      </a>
+      </div>
     </div>
   </div>
+</section>
 
-  <!-- 4. Blog & Publications -->
-  <div class="card card-blog">
-    <div class="card-header">
-      <span class="card-icon">✍️</span>
-      <span class="card-title">Blog & Publications</span>
+<!-- ═══ Bento Dashboard (Preserved from original) ═══ -->
+<hr class="divider">
+<section class="dashboard-section" id="dashboard">
+  <div class="dashboard-inner">
+    <div class="dashboard-toggle">
+      <div>
+        <div class="section-label">✦ COMMAND CENTER</div>
+        <h2 class="section-title" style="margin-bottom:0">Personal Dashboard</h2>
+      </div>
     </div>
-    <div class="blog-list">
-      <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="blog-item">
-        <span class="blog-icon">📝</span>
-        <span class="blog-label">Medium Articles</span>
-        <span class="blog-tag">Blog</span>
-      </a>
-      <a href="https://devgenius.io/" target="_blank" class="blog-item">
-        <span class="blog-icon">💡</span>
-        <span class="blog-label">Dev Genius</span>
-        <span class="blog-tag">Publication</span>
-      </a>
-      <a href="https://developers.google.com/profile/u/sendtoshailesh" target="_blank" class="blog-item">
-        <span class="blog-icon">🔬</span>
-        <span class="blog-label">Google Dev Library</span>
-        <span class="blog-tag">Author</span>
-      </a>
-      <a href="portfolio.html#publications" class="blog-item">
-        <span class="blog-icon">🎤</span>
-        <span class="blog-label">Speaking & Talks</span>
-        <span class="blog-tag">Portfolio</span>
-      </a>
-      <a href="blog/" class="blog-item">
-        <span class="blog-icon">📊</span>
-        <span class="blog-label">Technical Blog</span>
-        <span class="blog-tag">New</span>
-      </a>
-    </div>
+
+    <main class="bento">
+      <!-- 1. Quick Links (2 cols) -->
+      <div class="card card-quick">
+        <div class="card-header">
+          <span class="card-icon">📌</span>
+          <span class="card-title">Quick Links</span>
+        </div>
+        <div class="quick-grid">
+          <a href="portfolio.html" class="quick-link">
+            <span class="quick-link-icon">👤</span>
+            <span class="quick-link-label">Portfolio</span>
+          </a>
+          <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="quick-link">
+            <span class="quick-link-icon">💼</span>
+            <span class="quick-link-label">LinkedIn</span>
+          </a>
+          <a href="https://github.com/sendtoshailesh" target="_blank" class="quick-link">
+            <span class="quick-link-icon">🐙</span>
+            <span class="quick-link-label">GitHub</span>
+          </a>
+          <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="quick-link">
+            <span class="quick-link-icon">✍️</span>
+            <span class="quick-link-label">Medium</span>
+          </a>
+          <a href="mailto:sendtoshailesh@gmail.com" class="quick-link">
+            <span class="quick-link-icon">📧</span>
+            <span class="quick-link-label">Email</span>
+          </a>
+          <a href="https://x.com/sendtoshailesh" target="_blank" class="quick-link">
+            <span class="quick-link-icon">🐦</span>
+            <span class="quick-link-label">X / Twitter</span>
+          </a>
+          <a href="https://sendtoshailesh.github.io/my-bookmarks/" target="_blank" class="quick-link">
+            <span class="quick-link-icon">🔖</span>
+            <span class="quick-link-label">Bookmarks</span>
+          </a>
+          <a href="https://github.com/sendtoshailesh?tab=repositories" target="_blank" class="quick-link">
+            <span class="quick-link-icon">📂</span>
+            <span class="quick-link-label">All Repos</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 2. Bookmarks -->
+      <div class="card card-bookmarks">
+        <div class="card-header">
+          <span class="card-icon">🔖</span>
+          <span class="card-title">Bookmarks</span>
+        </div>
+        <div class="bookmarks-count">1,442</div>
+        <div class="bookmarks-label">saved bookmarks from Chrome & Edge</div>
+        <a href="https://sendtoshailesh.github.io/my-bookmarks/" class="bookmarks-cta">Open Bookmarks App →</a>
+      </div>
+
+      <!-- 3. Projects (2 cols) -->
+      <div class="card card-projects">
+        <div class="card-header">
+          <span class="card-icon">🚀</span>
+          <span class="card-title">Featured Projects</span>
+          <a href="https://github.com/sendtoshailesh?tab=repositories" target="_blank" class="card-badge">View All →</a>
+        </div>
+        <div class="project-list">
+          <a href="https://github.com/sendtoshailesh/my-bookmarks" target="_blank" class="project-item">
+            <span class="project-emoji">🔖</span>
+            <div class="project-info">
+              <div class="project-name">my-bookmarks</div>
+              <div class="project-desc">Git-based bookmark manager with web UI</div>
+            </div>
+          </a>
+          <a href="https://github.com/sendtoshailesh/content-creation" target="_blank" class="project-item">
+            <span class="project-emoji">📝</span>
+            <div class="project-info">
+              <div class="project-name">content-creation</div>
+              <div class="project-desc">Workflow to create content from idea</div>
+            </div>
+          </a>
+          <a href="https://github.com/sendtoshailesh/my-RAG-experiments" target="_blank" class="project-item">
+            <span class="project-emoji">🤖</span>
+            <div class="project-info">
+              <div class="project-name">my-RAG-experiments</div>
+              <div class="project-desc">RAG experiments and AI prototypes</div>
+            </div>
+          </a>
+          <a href="https://github.com/sendtoshailesh/postgres-data-masking-anonymization" target="_blank" class="project-item">
+            <span class="project-emoji">🔒</span>
+            <div class="project-info">
+              <div class="project-name">postgres-data-masking</div>
+              <div class="project-desc">Data masking & anonymization in PostgreSQL</div>
+            </div>
+          </a>
+          <a href="https://github.com/sendtoshailesh/ai-sdlc-pro" target="_blank" class="project-item">
+            <span class="project-emoji">⚡</span>
+            <div class="project-info">
+              <div class="project-name">ai-sdlc-pro</div>
+              <div class="project-desc">AI-powered SDLC automation</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- 4. Blog & Publications -->
+      <div class="card card-blog-dash">
+        <div class="card-header">
+          <span class="card-icon">✍️</span>
+          <span class="card-title">Blog & Publications</span>
+        </div>
+        <div class="blog-list">
+          <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="blog-item">
+            <span class="blog-icon">📝</span>
+            <span class="blog-label">Medium Articles</span>
+            <span class="blog-tag-sm">Blog</span>
+          </a>
+          <a href="https://devgenius.io/" target="_blank" class="blog-item">
+            <span class="blog-icon">💡</span>
+            <span class="blog-label">Dev Genius</span>
+            <span class="blog-tag-sm">Publication</span>
+          </a>
+          <a href="https://developers.google.com/profile/u/sendtoshailesh" target="_blank" class="blog-item">
+            <span class="blog-icon">🔬</span>
+            <span class="blog-label">Google Dev Library</span>
+            <span class="blog-tag-sm">Author</span>
+          </a>
+          <a href="portfolio.html#publications" class="blog-item">
+            <span class="blog-icon">🎤</span>
+            <span class="blog-label">Speaking & Talks</span>
+            <span class="blog-tag-sm">Portfolio</span>
+          </a>
+          <a href="blog/" class="blog-item">
+            <span class="blog-icon">📊</span>
+            <span class="blog-label">Technical Blog</span>
+            <span class="blog-tag-sm">New</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 5. Daily Tools -->
+      <div class="card card-tools">
+        <div class="card-header">
+          <span class="card-icon">🛠️</span>
+          <span class="card-title">Daily Tools</span>
+        </div>
+        <div class="tools-grid">
+          <a href="https://github.com/features/copilot" target="_blank" class="tool-item">
+            <span class="tool-icon">🤖</span>
+            <span class="tool-label">GitHub Copilot</span>
+          </a>
+          <a href="https://chatgpt.com" target="_blank" class="tool-item">
+            <span class="tool-icon">💬</span>
+            <span class="tool-label">ChatGPT</span>
+          </a>
+          <a href="https://www.perplexity.ai" target="_blank" class="tool-item">
+            <span class="tool-icon">🔍</span>
+            <span class="tool-label">Perplexity</span>
+          </a>
+          <a href="https://insiders.vscode.dev/" target="_blank" class="tool-item">
+            <span class="tool-icon">💻</span>
+            <span class="tool-label">VS Code</span>
+          </a>
+          <a href="https://claude.ai" target="_blank" class="tool-item">
+            <span class="tool-icon">🧠</span>
+            <span class="tool-label">Claude</span>
+          </a>
+          <a href="https://excalidraw.com" target="_blank" class="tool-item">
+            <span class="tool-icon">🎨</span>
+            <span class="tool-label">Excalidraw</span>
+          </a>
+          <a href="https://mermaid.live" target="_blank" class="tool-item">
+            <span class="tool-icon">📊</span>
+            <span class="tool-label">Mermaid</span>
+          </a>
+          <a href="https://regex101.com" target="_blank" class="tool-item">
+            <span class="tool-icon">🔧</span>
+            <span class="tool-label">Regex101</span>
+          </a>
+          <a href="https://carbon.now.sh" target="_blank" class="tool-item">
+            <span class="tool-icon">📸</span>
+            <span class="tool-label">Carbon</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 6. Learning -->
+      <div class="card card-learning">
+        <div class="card-header">
+          <span class="card-icon">📚</span>
+          <span class="card-title">Learning & Certs</span>
+        </div>
+        <div class="learning-list">
+          <a href="https://www.upgrad.com/lxp/learner/dashboard" target="_blank" class="learning-item">
+            <span class="learning-icon">🎓</span>
+            <span class="learning-label">upGrad Platform</span>
+            <span class="learning-status status-active">Active</span>
+          </a>
+          <a href="portfolio.html#certifications" class="learning-item">
+            <span class="learning-icon">🏅</span>
+            <span class="learning-label">AWS / Azure / GCP Certs</span>
+            <span class="learning-status status-done">View</span>
+          </a>
+          <a href="https://freelearninglist.org/" target="_blank" class="learning-item">
+            <span class="learning-icon">📖</span>
+            <span class="learning-label">Free Learning Resources</span>
+            <span class="learning-status status-active">Browse</span>
+          </a>
+          <a href="https://www.kdnuggets.com/cheat-sheets/index.html" target="_blank" class="learning-item">
+            <span class="learning-icon">📋</span>
+            <span class="learning-label">Cheat Sheets</span>
+            <span class="learning-status status-done">Reference</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 7. Social -->
+      <div class="card card-social">
+        <div class="card-header">
+          <span class="card-icon">🌐</span>
+          <span class="card-title">Connect</span>
+        </div>
+        <div class="social-grid-bento">
+          <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="social-link-bento">
+            <span class="social-icon-bento">💼</span> LinkedIn
+          </a>
+          <a href="https://github.com/sendtoshailesh" target="_blank" class="social-link-bento">
+            <span class="social-icon-bento">🐙</span> GitHub
+          </a>
+          <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="social-link-bento">
+            <span class="social-icon-bento">✍️</span> Medium
+          </a>
+          <a href="https://x.com/sendtoshailesh" target="_blank" class="social-link-bento">
+            <span class="social-icon-bento">🐦</span> X
+          </a>
+          <a href="mailto:sendtoshailesh@gmail.com" class="social-link-bento">
+            <span class="social-icon-bento">📧</span> Email
+          </a>
+          <a href="https://www.youtube.com/playlist?list=WL" target="_blank" class="social-link-bento">
+            <span class="social-icon-bento">🎬</span> YouTube
+          </a>
+        </div>
+      </div>
+
+      <!-- 8. Skills Snapshot -->
+      <div class="card card-skills">
+        <div class="card-header">
+          <span class="card-icon">💡</span>
+          <span class="card-title">Skills</span>
+          <a href="portfolio.html#skills" class="card-badge">Full List →</a>
+        </div>
+        <div class="skills-wrap">
+          <span class="skill-tag highlight">AI / ML</span>
+          <span class="skill-tag highlight">GitHub Copilot</span>
+          <span class="skill-tag highlight">GenAI / LLM</span>
+          <span class="skill-tag">AWS</span>
+          <span class="skill-tag">Azure</span>
+          <span class="skill-tag">PostgreSQL</span>
+          <span class="skill-tag">Cloud Architecture</span>
+          <span class="skill-tag">Data Migration</span>
+          <span class="skill-tag">RAG</span>
+          <span class="skill-tag">Docker / K8s</span>
+          <span class="skill-tag">Terraform</span>
+          <span class="skill-tag">Python</span>
+          <span class="skill-tag">Java</span>
+          <span class="skill-tag">System Design</span>
+          <span class="skill-tag">Technical Leadership</span>
+        </div>
+      </div>
+    </main>
   </div>
+</section>
 
-  <!-- 5. Daily Tools -->
-  <div class="card card-tools">
-    <div class="card-header">
-      <span class="card-icon">🛠️</span>
-      <span class="card-title">Daily Tools</span>
-    </div>
-    <div class="tools-grid">
-      <a href="https://github.com/features/copilot" target="_blank" class="tool-item">
-        <span class="tool-icon">🤖</span>
-        <span class="tool-label">GitHub Copilot</span>
-      </a>
-      <a href="https://chatgpt.com" target="_blank" class="tool-item">
-        <span class="tool-icon">💬</span>
-        <span class="tool-label">ChatGPT</span>
-      </a>
-      <a href="https://www.perplexity.ai" target="_blank" class="tool-item">
-        <span class="tool-icon">🔍</span>
-        <span class="tool-label">Perplexity</span>
-      </a>
-      <a href="https://insiders.vscode.dev/" target="_blank" class="tool-item">
-        <span class="tool-icon">💻</span>
-        <span class="tool-label">VS Code</span>
-      </a>
-      <a href="https://claude.ai" target="_blank" class="tool-item">
-        <span class="tool-icon">🧠</span>
-        <span class="tool-label">Claude</span>
-      </a>
-      <a href="https://excalidraw.com" target="_blank" class="tool-item">
-        <span class="tool-icon">🎨</span>
-        <span class="tool-label">Excalidraw</span>
-      </a>
-      <a href="https://mermaid.live" target="_blank" class="tool-item">
-        <span class="tool-icon">📊</span>
-        <span class="tool-label">Mermaid</span>
-      </a>
-      <a href="https://regex101.com" target="_blank" class="tool-item">
-        <span class="tool-icon">🔧</span>
-        <span class="tool-label">Regex101</span>
-      </a>
-      <a href="https://carbon.now.sh" target="_blank" class="tool-item">
-        <span class="tool-icon">📸</span>
-        <span class="tool-label">Carbon</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- 6. Learning -->
-  <div class="card card-learning">
-    <div class="card-header">
-      <span class="card-icon">📚</span>
-      <span class="card-title">Learning & Certs</span>
-    </div>
-    <div class="learning-list">
-      <a href="https://www.upgrad.com/lxp/learner/dashboard" target="_blank" class="learning-item">
-        <span class="learning-icon">🎓</span>
-        <span class="learning-label">upGrad Platform</span>
-        <span class="learning-status status-active">Active</span>
-      </a>
-      <a href="portfolio.html#certifications" class="learning-item">
-        <span class="learning-icon">🏅</span>
-        <span class="learning-label">AWS / Azure / GCP Certs</span>
-        <span class="learning-status status-done">View</span>
-      </a>
-      <a href="https://freelearninglist.org/" target="_blank" class="learning-item">
-        <span class="learning-icon">📖</span>
-        <span class="learning-label">Free Learning Resources</span>
-        <span class="learning-status status-active">Browse</span>
-      </a>
-      <a href="https://www.kdnuggets.com/cheat-sheets/index.html" target="_blank" class="learning-item">
-        <span class="learning-icon">📋</span>
-        <span class="learning-label">Cheat Sheets</span>
-        <span class="learning-status status-done">Reference</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- 7. Social -->
-  <div class="card card-social">
-    <div class="card-header">
-      <span class="card-icon">🌐</span>
-      <span class="card-title">Connect</span>
-    </div>
-    <div class="social-grid">
-      <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" class="social-link">
-        <span class="social-icon">💼</span> LinkedIn
-      </a>
-      <a href="https://github.com/sendtoshailesh" target="_blank" class="social-link">
-        <span class="social-icon">🐙</span> GitHub
-      </a>
-      <a href="https://medium.com/@shaileshkumarmishra" target="_blank" class="social-link">
-        <span class="social-icon">✍️</span> Medium
-      </a>
-      <a href="https://x.com/sendtoshailesh" target="_blank" class="social-link">
-        <span class="social-icon">🐦</span> X
-      </a>
-      <a href="mailto:sendtoshailesh@gmail.com" class="social-link">
-        <span class="social-icon">📧</span> Email
-      </a>
-      <a href="https://www.youtube.com/playlist?list=WL" target="_blank" class="social-link">
-        <span class="social-icon">🎬</span> YouTube
-      </a>
-    </div>
-  </div>
-
-  <!-- 8. Skills Snapshot -->
-  <div class="card card-skills">
-    <div class="card-header">
-      <span class="card-icon">💡</span>
-      <span class="card-title">Skills</span>
-      <a href="portfolio.html#skills" class="card-badge">Full List →</a>
-    </div>
-    <div class="skills-wrap">
-      <span class="skill-tag highlight">AI / ML</span>
-      <span class="skill-tag highlight">GitHub Copilot</span>
-      <span class="skill-tag highlight">GenAI / LLM</span>
-      <span class="skill-tag">AWS</span>
-      <span class="skill-tag">Azure</span>
-      <span class="skill-tag">PostgreSQL</span>
-      <span class="skill-tag">Cloud Architecture</span>
-      <span class="skill-tag">Data Migration</span>
-      <span class="skill-tag">RAG</span>
-      <span class="skill-tag">Docker / K8s</span>
-      <span class="skill-tag">Terraform</span>
-      <span class="skill-tag">Python</span>
-      <span class="skill-tag">Java</span>
-      <span class="skill-tag">System Design</span>
-      <span class="skill-tag">Technical Leadership</span>
-    </div>
-  </div>
-
-</main>
-
-<!-- Footer -->
+<!-- ═══ Footer ═══ -->
 <footer class="footer">
-  Built with ❤️ by Shailesh Mishra · <a href="portfolio.html" style="color:var(--accent)">Full Portfolio</a> · <a href="https://sendtoshailesh.github.io/my-bookmarks/" style="color:var(--accent)">Bookmarks</a>
+  <p>Built with ❤️ by Shailesh Mishra</p>
+  <p style="margin-top:4px">Chief Dev Advisor @ Microsoft | ex-AWS, Google | LinkedIn Top Data Architecture Voice | AWS All-Star</p>
+  <div class="footer-links">
+    <a href="https://www.linkedin.com/in/shaileshmishra1" target="_blank" title="LinkedIn">💼</a>
+    <a href="https://github.com/sendtoshailesh" target="_blank" title="GitHub">🐙</a>
+    <a href="https://medium.com/@shaileshkumarmishra" target="_blank" title="Medium">✍️</a>
+    <a href="https://x.com/sendtoshailesh" target="_blank" title="X">🐦</a>
+    <a href="mailto:sendtoshailesh@gmail.com" title="Email">📧</a>
+  </div>
+  <p style="margin-top:12px"><a href="portfolio.html">Full Portfolio</a> · <a href="blog/">Blog</a> · <a href="https://sendtoshailesh.github.io/my-bookmarks/">Bookmarks</a></p>
 </footer>
 
 <script>
@@ -586,29 +1268,42 @@ function toggleTheme() {
   localStorage.setItem('hub-theme', next);
   document.getElementById('btnTheme').textContent = next === 'dark' ? '🌙' : '☀️';
 }
-
-// Restore theme
 const saved = localStorage.getItem('hub-theme') || 'dark';
 document.documentElement.setAttribute('data-theme', saved);
 document.getElementById('btnTheme').textContent = saved === 'dark' ? '🌙' : '☀️';
 
-// Clock
-function updateClock() {
-  const now = new Date();
-  document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+// Mobile nav
+function toggleNav() {
+  document.getElementById('navLinks').classList.toggle('open');
 }
-updateClock();
-setInterval(updateClock, 30000);
 
-// Greeting based on time
-function setGreeting() {
-  const h = new Date().getHours();
-  const el = document.getElementById('greetingText');
-  if (h < 12) el.textContent = 'Good morning';
-  else if (h < 17) el.textContent = 'Good afternoon';
-  else el.textContent = 'Good evening';
-}
-setGreeting();
+// Scroll animations
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+// Active nav link
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY + 100;
+  sections.forEach(section => {
+    const top = section.offsetTop;
+    const height = section.offsetHeight;
+    const id = section.getAttribute('id');
+    const link = document.querySelector(`.nav-links a[href="#${id}"]`);
+    if (link) {
+      if (scrollY >= top && scrollY < top + height) {
+        document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+      }
+    }
+  });
+});
 </script>
 </body>
 </html>
