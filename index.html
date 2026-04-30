@@ -5,12 +5,42 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shailesh Mishra — Chief Dev Advisor | AI, Data & Cloud</title>
 <meta name="description" content="Shailesh Mishra — Chief Dev Advisor at Microsoft Asia. 22+ years in AI, Data & Cloud Transformation. ex-AWS, Google, Oracle, IBM.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sendtoshailesh.github.io/">
+<meta property="og:title" content="Shailesh Mishra — Chief Dev Advisor | AI, Data & Cloud">
+<meta property="og:description" content="Chief Dev Advisor at Microsoft Asia. 22+ years in AI, Data & Cloud Transformation. ex-AWS, Google, Oracle, IBM.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="Shailesh Mishra — Chief Dev Advisor | AI, Data & Cloud">
+<meta name="twitter:description" content="Chief Dev Advisor at Microsoft Asia. 22+ years in AI, Data & Cloud Transformation.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<!-- Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ── Reset ────────────────────────────────────────────────────── */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── Accessibility ────────────────────────────────────────────── */
+.skip-link {
+  position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+  z-index: 10000; background: var(--accent); color: #fff; padding: 12px 24px;
+  font-size: 14px; font-weight: 600; border-radius: 0 0 8px 0; text-decoration: none;
+}
+.skip-link:focus { left: 0; top: 0; width: auto; height: auto; overflow: visible; }
+:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+}
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
 
 :root {
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -30,7 +60,7 @@
   --border-hover: rgba(255,255,255,0.12);
   --text-0: #f0f0f5;
   --text-1: #a0a0b0;
-  --text-2: #606070;
+  --text-2: #8888a0;
   --accent: #6c63ff;
   --accent-glow: rgba(108,99,255,0.15);
   --accent-2: #00d4aa;
@@ -241,6 +271,29 @@ ul { list-style: none; }
 .cap-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
 .cap-desc { font-size: 13px; color: var(--text-1); line-height: 1.6; }
 
+/* ── Certifications & Recognition ─────────────────────────────── */
+.creds-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px;
+}
+.cred-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px 16px; text-align: center; transition: all var(--transition);
+}
+.cred-card:hover { border-color: var(--border-hover); transform: translateY(-3px); box-shadow: var(--shadow); }
+.cred-featured { border-color: rgba(108,99,255,0.3); background: linear-gradient(135deg, var(--bg-card), var(--accent-glow)); }
+.cred-icon { font-size: 28px; display: block; margin-bottom: 10px; }
+.cred-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.cred-desc { font-size: 11px; color: var(--text-2); line-height: 1.4; }
+.awards-strip {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+}
+.award-badge {
+  padding: 8px 18px; border-radius: 24px; font-size: 13px; font-weight: 500;
+  background: var(--tag-bg); border: 1px solid var(--border); color: var(--text-1);
+  transition: all var(--transition);
+}
+.award-badge:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+
 /* ── Featured Projects ────────────────────────────────────────── */
 .projects-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
@@ -323,6 +376,19 @@ ul { list-style: none; }
 .pub-icon { font-size: 20px; margin-bottom: 10px; }
 .pub-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
 .pub-desc { font-size: 13px; color: var(--text-1); line-height: 1.5; }
+
+/* ── Video Embeds ─────────────────────────────────────────────── */
+.video-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.video-embed { border-radius: var(--radius); overflow: hidden; }
+.video-embed iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: var(--radius); }
+.video-placeholder {
+  width: 100%; aspect-ratio: 16/9; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  background: var(--bg-card); border: 2px dashed var(--border); border-radius: var(--radius);
+  color: var(--text-2); cursor: default;
+}
+.video-placeholder-icon { font-size: 36px; opacity: 0.4; }
+.video-placeholder-text { font-size: 12px; opacity: 0.6; }
 
 /* ── Contact ──────────────────────────────────────────────────── */
 .contact-grid {
@@ -490,6 +556,7 @@ ul { list-style: none; }
   .projects-grid { grid-template-columns: repeat(2, 1fr); }
   .testimonials-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
+  .creds-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 768px) {
   .nav-links { display: none; }
@@ -503,8 +570,9 @@ ul { list-style: none; }
   .hero h1 { font-size: 36px; }
   .hero-tagline { font-size: 15px; }
   .section-title { font-size: 28px; }
-  .pillars-grid, .cap-grid, .projects-grid, .blog-grid, .pub-grid { grid-template-columns: 1fr; }
+  .pillars-grid, .cap-grid, .projects-grid, .blog-grid, .pub-grid, .video-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .creds-grid { grid-template-columns: repeat(2, 1fr); }
   .contact-grid { grid-template-columns: 1fr; }
   .bento { grid-template-columns: 1fr; }
   .card-quick, .card-projects { grid-column: span 1; }
@@ -519,8 +587,41 @@ ul { list-style: none; }
 .animate-on-scroll { opacity: 0; transform: translateY(24px); transition: all 0.6s ease; }
 .animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "mainEntity": {
+    "@type": "Person",
+    "name": "Shailesh Mishra",
+    "jobTitle": "Chief Dev Advisor",
+    "worksFor": {"@type": "Organization", "name": "Microsoft"},
+    "url": "https://sendtoshailesh.github.io",
+    "image": "https://avatars.githubusercontent.com/u/50418172?v=4",
+    "sameAs": [
+      "https://www.linkedin.com/in/shaileshmishra1",
+      "https://github.com/sendtoshailesh",
+      "https://medium.com/@shaileshkumarmishra",
+      "https://x.com/sendtoshailesh",
+      "https://developers.google.com/profile/u/sendtoshailesh"
+    ],
+    "alumniOf": [
+      {"@type": "CollegeOrUniversity", "name": "Indian Institute of Technology, Delhi"},
+      {"@type": "CollegeOrUniversity", "name": "Indira Gandhi National Open University"}
+    ],
+    "award": [
+      "LinkedIn Top Data Architecture Voice",
+      "AWS All-Star Solution Architect",
+      "Most Impactful GCP Customer Advocate",
+      "Best of Operational Excellence - Amazon"
+    ],
+    "knowsAbout": ["Artificial Intelligence", "Cloud Architecture", "Data Engineering", "PostgreSQL", "Azure", "AWS", "Google Cloud", "GenAI", "LLM"]
+  }
+}
+</script>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <!-- ═══ Navigation ═══ -->
 <nav class="nav">
@@ -540,13 +641,14 @@ ul { list-style: none; }
     </div>
     <div class="nav-actions">
       <button class="btn-icon" id="btnTheme" onclick="toggleTheme()" title="Toggle theme">🌙</button>
-      <button class="nav-mobile" id="navToggle" onclick="toggleNav()" aria-label="Menu">☰</button>
+      <button class="nav-mobile" id="navToggle" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">☰</button>
     </div>
   </div>
 </nav>
 
 <!-- ═══ Hero ═══ -->
 <section id="home" class="hero">
+  <div id="main-content"></div>
   <div class="hero-inner">
     <div class="hero-content">
       <div class="hero-label">✦ Chief Dev Advisor · Microsoft Asia</div>
@@ -655,6 +757,50 @@ ul { list-style: none; }
     <p class="philosophy-attr">— The principle behind 22+ years of building and shipping</p>
   </div>
 </div>
+
+<!-- ═══ Certifications & Recognition ═══ -->
+<section class="section section-alt">
+  <div class="section-inner">
+    <div class="section-label">✦ CREDENTIALS</div>
+    <h2 class="section-title">Certifications & Recognition</h2>
+    <p class="section-subtitle">Industry-recognized credentials and honors earned across Microsoft, AWS, Google, Oracle, and IBM.</p>
+    <div class="creds-grid">
+      <div class="cred-card cred-featured animate-on-scroll">
+        <span class="cred-icon">🎓</span>
+        <div class="cred-title">IIT Delhi</div>
+        <div class="cred-desc">Executive Programme for Tech Product Management, 2024</div>
+      </div>
+      <div class="cred-card animate-on-scroll">
+        <span class="cred-icon">☁️</span>
+        <div class="cred-title">AWS SA Professional</div>
+        <div class="cred-desc">Certified Solutions Architect – Professional</div>
+      </div>
+      <div class="cred-card animate-on-scroll">
+        <span class="cred-icon">🔵</span>
+        <div class="cred-title">Google Cloud Certified</div>
+        <div class="cred-desc">Data Engineer & Digital Leader</div>
+      </div>
+      <div class="cred-card animate-on-scroll">
+        <span class="cred-icon">🍃</span>
+        <div class="cred-title">MongoDB SA</div>
+        <div class="cred-desc">Solutions Architect Certified</div>
+      </div>
+      <div class="cred-card animate-on-scroll">
+        <span class="cred-icon">🎤</span>
+        <div class="cred-title">AWS Tier 2 Speaker</div>
+        <div class="cred-desc">Authorized public speaker & evangelist</div>
+      </div>
+    </div>
+    <div class="awards-strip">
+      <div class="award-badge animate-on-scroll">💼 LinkedIn Top Data Architecture Voice</div>
+      <div class="award-badge animate-on-scroll">⭐ AWS All-Star Solution Architect</div>
+      <div class="award-badge animate-on-scroll">🏆 Most Impactful GCP Customer Advocate</div>
+      <div class="award-badge animate-on-scroll">🥇 Best of Operational Excellence — Amazon</div>
+      <div class="award-badge animate-on-scroll">🤖 Automation Expert — IBM</div>
+      <div class="award-badge animate-on-scroll">🏅 Best SME — IBM</div>
+    </div>
+  </div>
+</section>
 
 <!-- ═══ Leadership Capabilities ═══ -->
 <section class="section">
@@ -889,6 +1035,21 @@ ul { list-style: none; }
         <div class="pub-icon">🔒</div>
         <div class="pub-title">Secure Google Cloud SQL Instances</div>
         <p class="pub-desc">Best practices for using Private IP with Cloud SQL: gotchas and troubleshooting techniques.</p>
+      </div>
+    </div>
+    <!-- Video Embeds — replace data-video-url with actual YouTube embed URLs -->
+    <div class="video-grid" style="margin-top: 32px;">
+      <div class="video-embed animate-on-scroll">
+        <div class="video-placeholder" data-video-url="">
+          <span class="video-placeholder-icon">▶</span>
+          <span class="video-placeholder-text">Talk video coming soon — paste YouTube URL in data-video-url</span>
+        </div>
+      </div>
+      <div class="video-embed animate-on-scroll">
+        <div class="video-placeholder" data-video-url="">
+          <span class="video-placeholder-icon">▶</span>
+          <span class="video-placeholder-text">Talk video coming soon — paste YouTube URL in data-video-url</span>
+        </div>
       </div>
     </div>
   </div>
@@ -1274,7 +1435,10 @@ document.getElementById('btnTheme').textContent = saved === 'dark' ? '🌙' : '�
 
 // Mobile nav
 function toggleNav() {
-  document.getElementById('navLinks').classList.toggle('open');
+  const links = document.getElementById('navLinks');
+  const btn = document.getElementById('navToggle');
+  links.classList.toggle('open');
+  btn.setAttribute('aria-expanded', links.classList.contains('open'));
 }
 
 // Scroll animations

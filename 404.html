@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Not Found — Shailesh Mishra</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: #0a0a0f; color: #f0f0f5; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+}
+.container { max-width: 520px; padding: 40px 24px; }
+.code {
+  font-size: 120px; font-weight: 800; line-height: 1;
+  background: linear-gradient(135deg, #6c63ff, #00d4aa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 16px;
+}
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+p { color: #a0a0b0; font-size: 16px; line-height: 1.6; margin-bottom: 32px; }
+.links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.links a {
+  padding: 12px 24px; border-radius: 10px; text-decoration: none;
+  font-weight: 600; font-size: 14px; transition: all 0.25s ease;
+}
+.links a.primary {
+  background: linear-gradient(135deg, #6c63ff, #5a54e0); color: #fff;
+}
+.links a.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(108,99,255,0.3); }
+.links a.secondary {
+  background: rgba(255,255,255,0.06); color: #f0f0f5; border: 1px solid rgba(255,255,255,0.08);
+}
+.links a.secondary:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.1); }
+:focus-visible { outline: 2px solid #6c63ff; outline-offset: 2px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="code">404</div>
+  <h1>Page Not Found</h1>
+  <p>The page you're looking for doesn't exist or has been moved.</p>
+  <div class="links">
+    <a href="/" class="primary">Home</a>
+    <a href="/portfolio.html" class="secondary">Portfolio</a>
+    <a href="/blog/" class="secondary">Blog</a>
+  </div>
+</div>
+</body>
+</html>

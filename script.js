@@ -5,6 +5,7 @@ const navMenu = document.querySelector('.nav-menu');
 mobileMenu.addEventListener('click', () => {
     mobileMenu.classList.toggle('active');
     navMenu.classList.toggle('active');
+    mobileMenu.setAttribute('aria-expanded', navMenu.classList.contains('active'));
 });
 
 // Close mobile menu when clicking on a link

@@ -5,6 +5,20 @@
     box-sizing: border-box;
 }
 
+/* Accessibility */
+.skip-link {
+    position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+    z-index: 10000; background: #667eea; color: #fff; padding: 12px 24px;
+    font-size: 14px; font-weight: 600; border-radius: 0 0 8px 0; text-decoration: none;
+}
+.skip-link:focus { left: 0; top: 0; width: auto; height: auto; overflow: visible; }
+:focus-visible {
+    outline: 2px solid #667eea; outline-offset: 2px; border-radius: 4px;
+}
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid #667eea; outline-offset: 2px;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;

@@ -7,15 +7,40 @@
 <meta name="description" content="A real-world case study showing how adding BUFFERS to EXPLAIN ANALYZE diagnosed a checkout query regression from 50ms to 1.2s, and the three tuning levers that fixed it.">
 <meta name="author" content="Shailesh Mishra">
 <meta name="keywords" content="PostgreSQL EXPLAIN BUFFERS, EXPLAIN ANALYZE BUFFERS, PostgreSQL buffer cache hit ratio, PostgreSQL slow query troubleshooting, shared_buffers tuning">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/postgresql-explain-buffers-case-study.html">
 <meta property="og:title" content="PostgreSQL EXPLAIN BUFFERS: How We Cut Checkout Latency 96%">
 <meta property="og:description" content="E-commerce case study: one word in EXPLAIN diagnosed what 3 days of network debugging missed.">
-<meta property="og:type" content="article">
+<meta property="og:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="PostgreSQL EXPLAIN BUFFERS: How We Cut Checkout Latency 96%">
+<meta name="twitter:description" content="E-commerce case study: one word in EXPLAIN diagnosed what 3 days of network debugging missed.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<!-- Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="blog-style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "PostgreSQL EXPLAIN BUFFERS: How We Cut Checkout Latency 96%",
+  "description": "A real-world case study showing how adding BUFFERS to EXPLAIN ANALYZE diagnosed a checkout query regression from 50ms to 1.2s.",
+  "author": {"@type": "Person", "name": "Shailesh Mishra", "url": "https://sendtoshailesh.github.io"},
+  "datePublished": "2026-04-26",
+  "publisher": {"@type": "Person", "name": "Shailesh Mishra"},
+  "mainEntityOfPage": "https://sendtoshailesh.github.io/blog/postgresql-explain-buffers-case-study.html"
+}
+</script>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <header class="blog-header">
   <div class="header-inner">
@@ -28,7 +53,7 @@
   </div>
 </header>
 
-<main class="blog-container">
+<main id="main-content" class="blog-container">
   <a href="./" class="back-link">&larr; Back to all posts</a>
 
   <article>

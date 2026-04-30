@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f"/>
+      <stop offset="50%" style="stop-color:#141419"/>
+      <stop offset="100%" style="stop-color:#0e0e14"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#6c63ff"/>
+      <stop offset="100%" style="stop-color:#5a54e0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+  <!-- Decorative glow -->
+  <circle cx="1000" cy="150" r="300" fill="#6c63ff" opacity="0.04"/>
+  <circle cx="200" cy="500" r="200" fill="#00d4aa" opacity="0.03"/>
+  <!-- Name -->
+  <text x="80" y="220" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="72" font-weight="900" fill="#f0f0f5">Shailesh</text>
+  <text x="80" y="300" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="72" font-weight="900" fill="#6c63ff">Mishra</text>
+  <!-- Title -->
+  <text x="80" y="370" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="28" font-weight="500" fill="#a0a0b0">Chief Dev Advisor · Microsoft Asia</text>
+  <!-- Tags -->
+  <rect x="80" y="410" width="120" height="36" rx="18" fill="#6c63ff" opacity="0.15"/>
+  <text x="140" y="434" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#6c63ff" text-anchor="middle">AI &amp; GenAI</text>
+  <rect x="216" y="410" width="170" height="36" rx="18" fill="#6c63ff" opacity="0.15"/>
+  <text x="301" y="434" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#6c63ff" text-anchor="middle">Cloud Architecture</text>
+  <rect x="402" y="410" width="170" height="36" rx="18" fill="#6c63ff" opacity="0.15"/>
+  <text x="487" y="434" font-family="Inter, sans-serif" font-size="14" font-weight="600" fill="#6c63ff" text-anchor="middle">Data Engineering</text>
+  <!-- Stats -->
+  <text x="80" y="520" font-family="Inter, sans-serif" font-size="18" font-weight="400" fill="#606070">22+ Years · ex-AWS, Google, Oracle, IBM · 75PB Data Migrated</text>
+  <!-- URL -->
+  <text x="80" y="580" font-family="Inter, sans-serif" font-size="16" font-weight="500" fill="#6c63ff">sendtoshailesh.github.io</text>
+  <!-- Bottom accent bar -->
+  <rect x="0" y="626" width="1200" height="4" fill="url(#accent)"/>
+</svg>
