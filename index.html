@@ -377,19 +377,6 @@ ul { list-style: none; }
 .pub-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
 .pub-desc { font-size: 13px; color: var(--text-1); line-height: 1.5; }
 
-/* ── Video Embeds ─────────────────────────────────────────────── */
-.video-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
-.video-embed { border-radius: var(--radius); overflow: hidden; }
-.video-embed iframe { width: 100%; aspect-ratio: 16/9; border: none; border-radius: var(--radius); }
-.video-placeholder {
-  width: 100%; aspect-ratio: 16/9; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 12px;
-  background: var(--bg-card); border: 2px dashed var(--border); border-radius: var(--radius);
-  color: var(--text-2); cursor: default;
-}
-.video-placeholder-icon { font-size: 36px; opacity: 0.4; }
-.video-placeholder-text { font-size: 12px; opacity: 0.6; }
-
 /* ── Contact ──────────────────────────────────────────────────── */
 .contact-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start;
@@ -424,7 +411,8 @@ ul { list-style: none; }
 }
 
 /* ── Bento Dashboard (preserved) ──────────────────────────────── */
-.dashboard-section { padding: 60px 24px 80px; }
+.dashboard-section { padding: 60px 24px 80px; display: none; }
+.dashboard-section.visible { display: block; }
 .dashboard-inner { max-width: var(--max-w); margin: 0 auto; }
 .dashboard-toggle {
   display: flex; align-items: center; justify-content: space-between;
@@ -570,7 +558,7 @@ ul { list-style: none; }
   .hero h1 { font-size: 36px; }
   .hero-tagline { font-size: 15px; }
   .section-title { font-size: 28px; }
-  .pillars-grid, .cap-grid, .projects-grid, .blog-grid, .pub-grid, .video-grid { grid-template-columns: 1fr; }
+  .pillars-grid, .cap-grid, .projects-grid, .blog-grid, .pub-grid { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .creds-grid { grid-template-columns: repeat(2, 1fr); }
   .contact-grid { grid-template-columns: 1fr; }
@@ -638,6 +626,7 @@ ul { list-style: none; }
       <a href="#insights">Blog</a>
       <a href="portfolio.html">Portfolio</a>
       <a href="#contact">Contact</a>
+      <a href="#dashboard" onclick="toggleDashboard(event)">Dashboard</a>
     </div>
     <div class="nav-actions">
       <button class="btn-icon" id="btnTheme" onclick="toggleTheme()" title="Toggle theme">🌙</button>
@@ -1037,21 +1026,6 @@ ul { list-style: none; }
         <p class="pub-desc">Best practices for using Private IP with Cloud SQL: gotchas and troubleshooting techniques.</p>
       </div>
     </div>
-    <!-- Video Embeds — replace data-video-url with actual YouTube embed URLs -->
-    <div class="video-grid" style="margin-top: 32px;">
-      <div class="video-embed animate-on-scroll">
-        <div class="video-placeholder" data-video-url="">
-          <span class="video-placeholder-icon">▶</span>
-          <span class="video-placeholder-text">Talk video coming soon — paste YouTube URL in data-video-url</span>
-        </div>
-      </div>
-      <div class="video-embed animate-on-scroll">
-        <div class="video-placeholder" data-video-url="">
-          <span class="video-placeholder-icon">▶</span>
-          <span class="video-placeholder-text">Talk video coming soon — paste YouTube URL in data-video-url</span>
-        </div>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -1128,8 +1102,8 @@ ul { list-style: none; }
 </section>
 
 <!-- ═══ Bento Dashboard (Preserved from original) ═══ -->
-<hr class="divider">
 <section class="dashboard-section" id="dashboard">
+  <hr class="divider">
   <div class="dashboard-inner">
     <div class="dashboard-toggle">
       <div>
@@ -1439,6 +1413,18 @@ function toggleNav() {
   const btn = document.getElementById('navToggle');
   links.classList.toggle('open');
   btn.setAttribute('aria-expanded', links.classList.contains('open'));
+}
+
+function toggleDashboard(e) {
+  e.preventDefault();
+  const section = document.getElementById('dashboard');
+  section.classList.toggle('visible');
+  if (section.classList.contains('visible')) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  // Close mobile nav if open
+  const links = document.getElementById('navLinks');
+  if (links.classList.contains('open')) toggleNav();
 }
 
 // Scroll animations
