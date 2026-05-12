@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spend Fewer Tokens, Get Better Code: A Context Engineering Guide for AI Code Assistants (Part 1 of 3) | Shailesh Mishra</title>
+  <meta name="description" content="Anthropic cut tool context by 85%. Accuracy improved from 49% to 74%. Here are five context engineering practices that make your AI code assistant produce better output while spending fewer tokens.">
+  <meta name="author" content="Shailesh Mishra">
+  <meta name="keywords" content="AI code assistant context engineering, GitHub Copilot better results, GitHub Copilot context management, optimize AI code assistant output, prompt quality, usage-based billing June 2026">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/ai-code-assistant-context-engineering-part-1.html">
+<meta property="og:title" content="Spend Fewer Tokens, Get Better Code: A Context Engineering Guide for AI Code Assistants">
+<meta property="og:description" content="Anthropic cut tool context by 85%. Accuracy improved from 49% to 74%. Five context engineering practices for better AI code assistant output.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="Spend Fewer Tokens, Get Better Code: A Context Engineering Guide for AI Code Assistants">
+<meta name="twitter:description" content="Anthropic cut tool context by 85%. Accuracy improved from 49% to 74%. Five context engineering practices for better AI code assistant output.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>Spend Fewer Tokens, Get Better Code: A Context Engineering Guide for AI Code Assistants</h1>
+      <div class="meta">Shailesh Mishra &middot; May 7, 2026 &middot; 12 min read</div>
+      <div style="margin-top: 0.75rem;">
+        <span class="tag">context-engineering</span>
+        <span class="tag">github-copilot</span>
+        <span class="tag">ai-code-assistant</span>
+        <span class="tag">series-part-1</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+
+      <p><em>Part 1 of 3 in the "Engineering Better AI Code Assistant Interactions" series</em></p>
+
+      <p>Last November, Anthropic's engineering team ran into a problem. Their tool-use system was loading 50+ MCP tool definitions into every prompt &mdash; 55,000 to 134,000 tokens of context before the conversation even started. The model was drowning in tool definitions it would never use in a given request.</p>
+
+      <p>Their fix was counterintuitive: instead of adding smarter tool selection logic on top of the existing context, they stripped it out. They built Tool Search, which loads only ~500 tokens initially and fetches relevant tool definitions on demand. The result: <strong>85% fewer tokens AND accuracy improved from 49% to 74%</strong> on Opus 4. On Opus 4.5, accuracy jumped from 79.5% to 88.1%.</p>
+
+      <p>Read that again. They removed context and the model got <em>better</em>.</p>
+
+      <p>This is not an isolated finding. A 2026 paper on SWEzze &mdash; a context compression system for software engineering tasks &mdash; showed that <strong>6x compression delivered 51-71% fewer tokens AND 5-9.2% better issue resolution rates</strong> on SWE-bench. Less input. Better output.</p>
+
+      <p>If you have used an AI code assistant for more than a week, you have experienced this pattern without knowing it. Some sessions, Copilot generates exactly what you need on the first attempt. Other sessions, it produces confused, irrelevant, or hallucinated code. The difference is usually not the model. It is the context. GitHub Copilot context management &mdash; what you include, exclude, and how you structure it &mdash; determines output quality more than model choice.</p>
+
+      <p>The single highest-leverage skill for AI-assisted development is <strong>context engineering</strong>: the practice of giving AI better input so it produces better output. The quality improvement is the primary goal. The cost savings &mdash; and with GitHub Copilot moving to usage-based billing on June 1, 2026, there are real cost savings &mdash; are a natural consequence.</p>
+
+      <p>This post covers five practices that make your AI code assistant more reliable. Every practice passes a simple test: <strong>would I do this even if AI were free?</strong> The answer is yes for all five.</p>
+
+      <img src="visuals/context-quality-paradox.png" alt="The Context Quality Paradox: Anthropic saw accuracy jump from 49% to 74% by reducing context">
+
+      <h2>The 30-70% Problem</h2>
+
+      <p>Research from Towards Data Science found that <strong>30-70% of typical AI prompt context is noise</strong> &mdash; tokens that do not help the model and actively degrade performance. In code assistant workflows, context noise falls into three categories: <strong>stale context</strong> (old files and chat history from previous tasks), <strong>redundant context</strong> (the same information loaded through multiple paths), and <strong>irrelevant context</strong> (tool definitions and files unrelated to your current task).</p>
+
+      <p>Anthropic's data puts a concrete number on this. Before their Tool Search optimization, 50+ MCP tools consumed <strong>55,000-134,000 tokens per request</strong>. After: ~500 tokens initial load. The 85% reduction did not remove useful information &mdash; it removed noise.</p>
+
+      <h2>Five Practices That Improve Output Quality and Optimize AI Code Assistant Output</h2>
+
+      <p>Each practice passes the "would I do this even if AI were free?" test. Ordered by impact and ease of adoption.</p>
+
+      <h3>Practice 1: Single-Task Focus</h3>
+      <p>Close files unrelated to your current task before prompting. Every open file adds tokens to Copilot's context. More importantly, unrelated files introduce conflicting patterns. Anthropic saw accuracy jump 25 percentage points by loading only relevant tool definitions instead of everything.</p>
+
+      <h3>Practice 2: Thread Hygiene</h3>
+      <p>Start a new chat thread when you switch tasks. One thread per task. Old messages accumulate tokens and steer the model toward previous (now-irrelevant) problems. TDS analysis found that removing junk from context clears 30-70% of tokens.</p>
+
+      <h3>Practice 3: Targeted References</h3>
+      <p>Use <code>#file</code> references to include specific files instead of relying on implicit "everything that is open" context. Anthropic's Programmatic Tool Calling reduced tokens from 43,588 to 27,297 (37%) while improving accuracy from 25.6% to 28.5%.</p>
+
+      <h3>Practice 4: Front-Load Intent</h3>
+      <p>State what you want in the first sentence, then provide details. Language models process context sequentially; putting intent first primes the model's attention. Structure prompts as: <strong>intent &rarr; context &rarr; constraints</strong>.</p>
+
+      <h3>Practice 5: Stable Instructions</h3>
+      <p>Maintain a <code>.github/copilot-instructions.md</code> file with your project's tech stack, conventions, and constraints. This provides consistent, cacheable project context and eliminates repetitive explanations.</p>
+
+      <img src="visuals/context-engineering-framework.png" alt="Context Engineering: Five practices with quality benefits and token reduction">
+
+      <h2>What Happens When You Engineer Context: The Data</h2>
+
+      <p>Three concrete scenarios comparing unoptimized vs. optimized context:</p>
+
+      <table>
+        <thead>
+          <tr><th>Scenario</th><th>Token Reduction</th><th>Quality Improvement</th><th>Source</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Anthropic Tool Search</td><td>85% (55K &rarr; ~500)</td><td>49% &rarr; 74% accuracy</td><td><a href="https://www.anthropic.com/engineering/advanced-tool-use">Anthropic Engineering</a></td></tr>
+          <tr><td>SWEzze Compression</td><td>51-71%</td><td>5-9.2% better resolution</td><td><a href="https://arxiv.org/abs/2603.28119">SWEzze paper</a></td></tr>
+          <tr><td>Programmatic Tool Calling</td><td>37% (43,588 &rarr; 27,297)</td><td>25.6% &rarr; 28.5% accuracy</td><td><a href="https://www.anthropic.com/engineering/advanced-tool-use">Anthropic Engineering</a></td></tr>
+        </tbody>
+      </table>
+
+      <p>The pattern is unambiguous: <strong>in every scenario, less context produced better results</strong>.</p>
+
+      <img src="visuals/before-after-context.png" alt="Less Context, Better Results: before and after data from three scenarios">
+
+      <h2>June 1, 2026: Context Quality Gets a Price Tag</h2>
+
+      <p>Starting June 1, 2026, GitHub Copilot moves from a premium-request system to usage-based billing. Every token of junk context now has a visible cost. But even without the billing change, this advice makes you a better developer.</p>
+
+      <p><em>Note: model multipliers, included models, and promotional credits are subject to change. Build your workflow around context quality, which is durable, not around specific multiplier values.</em></p>
+
+      <h2>Your First Week: Five Changes, Five Minutes Each</h2>
+
+      <ol>
+        <li><strong>Close irrelevant files before prompting</strong> (quality impact: high)</li>
+        <li><strong>Start new threads when switching tasks</strong> (quality impact: high)</li>
+        <li><strong>Use <code>#file</code> references for targeted context</strong> (quality impact: high)</li>
+        <li><strong>Create a <code>.github/copilot-instructions.md</code></strong> (quality impact: medium, compounds over time)</li>
+        <li><strong>Front-load intent in every prompt</strong> (quality impact: medium)</li>
+      </ol>
+
+      <h2>Coming Up Next</h2>
+
+      <p>In <strong><a href="ai-code-assistant-caching-workflow-part-2.html">Part 2: "Invisible Compound Savings"</a></strong>, I cover prompt caching (up to 90% savings on repeated context) and workflow discipline (the retry tax and how to eliminate it).</p>
+
+      <p>In <strong><a href="ai-code-assistant-model-selection-part-3.html">Part 3: "The 120x Spread"</a></strong>, I cover model selection &mdash; not "use cheap models" but "understand when premium models genuinely help."</p>
+
+      <p><em>This is Part 1 of 3. <a href="ai-code-assistant-caching-workflow-part-2.html">Part 2: Invisible Compound Savings &rarr;</a> | <a href="ai-code-assistant-model-selection-part-3.html">Part 3: The 120x Spread &rarr;</a></em></p>
+
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+
+</body>
+</html>

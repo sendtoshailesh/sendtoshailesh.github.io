@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 120x Spread: Understanding What You Pay For and When It Matters (Part 3 of 3) | Shailesh Mishra</title>
+  <meta name="description" content="The cheapest AI model costs 0.25x. The most expensive costs 30x. A three-tier task taxonomy for matching model capability to task complexity, plus the complete three-layer optimization playbook.">
+  <meta name="author" content="Shailesh Mishra">
+  <meta name="keywords" content="GitHub Copilot model multipliers, AI model selection, model routing cost optimization, task taxonomy AI code assistant, team governance, RouteLLM">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/ai-code-assistant-model-selection-part-3.html">
+<meta property="og:title" content="The 120x Spread: Understanding What You Pay For and When It Matters">
+<meta property="og:description" content="0.25x to 30x = 120x cost spread. A task taxonomy for matching AI model capability to task complexity.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="The 120x Spread: Understanding What You Pay For and When It Matters">
+<meta name="twitter:description" content="0.25x to 30x = 120x cost spread. A task taxonomy for matching AI model capability to task complexity.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>The 120x Spread: Understanding What You Pay For and When It Matters</h1>
+      <div class="meta">Shailesh Mishra &middot; May 11, 2026 &middot; 10 min read</div>
+      <div style="margin-top: 0.75rem;">
+        <span class="tag">model-selection</span>
+        <span class="tag">github-copilot</span>
+        <span class="tag">ai-code-assistant</span>
+        <span class="tag">series-part-3</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+
+      <p><em>Part 3 of 3 in the "Engineering Better AI Code Assistant Interactions" series. Previously: <a href="ai-code-assistant-context-engineering-part-1.html">Part 1</a> covered context engineering (50-85% token reduction). <a href="ai-code-assistant-caching-workflow-part-2.html">Part 2</a> covered prompt caching (90% discount) and workflow discipline.</em></p>
+
+      <h2>Not All Tokens Are Priced Equal: Understanding GitHub Copilot Model Multipliers</h2>
+
+      <p>Under GitHub Copilot's usage-based billing (effective June 1, 2026), every model carries a multiplier. GPT-5.4 nano costs 0.25x. Claude Opus 4.6 fast mode costs 30x. That is a <strong>120x cost difference</strong> for the same interaction pattern. <em>(Model multipliers and included models are subject to change &mdash; GitHub's documentation says so explicitly.)</em></p>
+
+      <p>But this is not a "use cheap models" story. Apple ML Research found that reasoning models burn thousands of extra tokens on simple tasks &mdash; with <strong>zero quality improvement</strong>. Standard models actually provided better accuracy on low-complexity items.</p>
+
+      <h2>Matching Model Capability to Task Complexity</h2>
+
+      <h3>Tier 1: Simple tasks (60-70% of daily interactions)</h3>
+      <p>Variable renaming. Boilerplate generation. Test scaffolding. Docstring writing. Import fixing. These tasks require pattern matching, not multi-step reasoning. Free/cheap models perform equally well.</p>
+
+      <h3>Tier 2: Moderate tasks (20-30%)</h3>
+      <p>Code review, refactoring, debugging, architecture questions, multi-file understanding. Standard models (1x) offer the best quality-per-credit ratio.</p>
+
+      <h3>Tier 3: Complex tasks (5-10%)</h3>
+      <p>Multi-file refactoring with dependencies, novel algorithms, system design. The <strong>only</strong> tier where premium models demonstrably outperform standard models. Use them deliberately.</p>
+
+      <h3>The cost math</h3>
+
+      <table>
+        <thead>
+          <tr><th>Tier</th><th>% of requests</th><th>Multiplier</th><th>Weighted cost</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Simple (Tier 1)</td><td>65%</td><td>0x (included)</td><td>0</td></tr>
+          <tr><td>Moderate (Tier 2)</td><td>25%</td><td>1x</td><td>0.25x</td></tr>
+          <tr><td>Complex (Tier 3)</td><td>10%</td><td>3x</td><td>0.30x</td></tr>
+          <tr><td><strong>Effective average</strong></td><td></td><td></td><td><strong>0.55x (45% savings)</strong></td></tr>
+        </tbody>
+      </table>
+
+      <p>RouteLLM demonstrated this at scale: <strong>95% of GPT-4 quality using only 14% GPT-4 calls</strong>. A production team dropped from <strong>$3,000/day to $970/day (68% reduction, $740K/year annualized)</strong> through routing alone.</p>
+
+      <img src="visuals/task-model-alignment.png" alt="Task-Model Alignment: Matching capability to complexity">
+
+      <h2>Let the Router Do the Work</h2>
+
+      <p>Copilot's auto model selection offers a 10% multiplier discount and algorithmically routes tasks to appropriate models. RouteLLM achieved 95% quality at 75% cost reduction &mdash; better than most humans would achieve switching manually. CascadeFlow delivered 69% savings with 96% quality retention. Both prove: let the system match complexity to capability.</p>
+
+      <p><em>Caveat: limited public data on Copilot's specific auto-selection algorithm. For maximum control, manual selection using the task taxonomy is more predictable.</em></p>
+
+      <p>Clean context (Part 1) improves routing decisions. When the router gets better signal about what you are asking, it makes better model choices. Clean context improves model output <em>and</em> model selection.</p>
+
+      <img src="visuals/routing-decision-comparison.png" alt="Auto-selection vs Manual Routing: Decision flow for choosing your approach">
+
+      <h2>Budget Visibility for Engineering Managers: GitHub Copilot Usage-Based Billing Governance</h2>
+
+      <p>The new billing model introduces governance tools that did not exist under flat-rate pricing: pooled usage across organizations, budget controls at enterprise/cost center/user levels, and visibility into which developers, projects, and models consume the most credits. For the first time, a developer making 300 requests/day and one making 30 look different on the bill.</p>
+
+      <h3>Recommended team standards</h3>
+
+      <ol>
+        <li><strong>Establish default model guidelines by task type.</strong> Document in your team wiki or <code>.github/copilot-instructions.md</code>.</li>
+        <li><strong>Set budget alerts before June 1.</strong> Configure at 50%, 75%, and 90% of credit allocation.</li>
+        <li><strong>Review top-consuming projects monthly.</strong> Identify which workflows generate the most tokens.</li>
+        <li><strong>Invest in context engineering training, not model restrictions.</strong> The managers who teach context engineering get the same cost reduction with happier developers.</li>
+      </ol>
+
+      <img src="visuals/team-optimization-strategies.png" alt="Team optimization strategies: Training vs Restriction outcomes comparison">
+
+      <img src="visuals/team-governance-dashboard.png" alt="Team Governance: Credit consumption visibility dashboard">
+
+      <h2>The Complete Playbook: Three Layers, One Page</h2>
+
+      <table>
+        <thead>
+          <tr><th>Layer</th><th>What</th><th>Savings</th><th>"Would I do this if AI were free?"</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>1: Context Engineering</strong> (<a href="ai-code-assistant-context-engineering-part-1.html">Part 1</a>)</td><td>Five practices: close files, thread hygiene, #file references, front-load intent, stable instructions</td><td>50-85% token reduction</td><td>Yes</td></tr>
+          <tr><td><strong>2: Caching + Workflow</strong> (<a href="ai-code-assistant-caching-workflow-part-2.html">Part 2</a>)</td><td>Prefix caching, retry elimination, structured prompts</td><td>Up to 90% on repeated context</td><td>Mostly</td></tr>
+          <tr><td><strong>3: Model Selection</strong> (Part 3)</td><td>Task taxonomy, auto-selection, deliberate premium use</td><td>45-75% on model costs</td><td>Billing-specific</td></tr>
+        </tbody>
+      </table>
+
+      <p>Combined potential: <strong>70-90% effective cost reduction</strong> with better output quality than an unoptimized workflow using expensive models. Start with Layer 1 (free, quality-first). Each layer multiplies the savings of the layers below it.</p>
+
+      <img src="visuals/three-layer-stack.png" alt="The Three-Layer Optimization Stack">
+
+      <h2>Start With Context, Not Cost</h2>
+
+      <p>The developers who will thrive under usage-based billing are not the ones who switched to the cheapest model. They are the ones who learned to give AI better input.</p>
+
+      <ol>
+        <li><strong>Apply the five context engineering practices from <a href="ai-code-assistant-context-engineering-part-1.html">Part 1</a> this week.</strong></li>
+        <li><strong>Stabilize your copilot-instructions file to enable caching (<a href="ai-code-assistant-caching-workflow-part-2.html">Part 2</a>).</strong></li>
+        <li><strong>Review the task taxonomy and match your default model to your actual task mix.</strong></li>
+      </ol>
+
+      <p>The billing change is real. The advice is durable. Better input produces better output whether you pay per token, per request, or nothing at all.</p>
+
+      <p><em><a href="ai-code-assistant-context-engineering-part-1.html">&larr; Part 1: Context Engineering</a> | <a href="ai-code-assistant-caching-workflow-part-2.html">&larr; Part 2: Invisible Compound Savings</a></em></p>
+
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+
+</body>
+</html>

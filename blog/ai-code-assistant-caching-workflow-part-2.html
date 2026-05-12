@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invisible Compound Savings: Caching, Workflow Discipline, and the Habits That Add Up (Part 2 of 3) | Shailesh Mishra</title>
+  <meta name="description" content="90% of your AI prompt context repeats across every request. OpenAI and Anthropic offer 90% off cached tokens. Here is how prompt caching and retry elimination compound into structural savings.">
+  <meta name="author" content="Shailesh Mishra">
+  <meta name="keywords" content="prompt caching AI code assistant, GitHub Copilot caching, AI coding retry reduction, workflow discipline, token optimization, copilot-instructions caching">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/ai-code-assistant-caching-workflow-part-2.html">
+<meta property="og:title" content="Invisible Compound Savings: Caching, Workflow Discipline, and the Habits That Add Up">
+<meta property="og:description" content="90% of your AI prompt context repeats every request. Prompt caching + retry elimination = structural savings that compound silently.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="Invisible Compound Savings: Caching, Workflow Discipline, and the Habits That Add Up">
+<meta name="twitter:description" content="90% of your AI prompt context repeats every request. Prompt caching + retry elimination = structural savings that compound silently.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>Invisible Compound Savings: Caching, Workflow Discipline, and the Habits That Add Up</h1>
+      <div class="meta">Shailesh Mishra &middot; May 11, 2026 &middot; 10 min read</div>
+      <div style="margin-top: 0.75rem;">
+        <span class="tag">prompt-caching</span>
+        <span class="tag">github-copilot</span>
+        <span class="tag">ai-code-assistant</span>
+        <span class="tag">series-part-2</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+
+      <p><em>Part 2 of 3 in the "Engineering Better AI Code Assistant Interactions" series. Previously in <a href="ai-code-assistant-context-engineering-part-1.html">Part 1</a>: Five context engineering practices that improve AI code assistant output quality &mdash; while spending fewer tokens.</em></p>
+
+      <h2>The 90% Discount You Are Not Using</h2>
+
+      <p>OpenAI and Anthropic both offer a 90% discount on cached input tokens. If you have never heard of AI code assistant prompt caching, you are not alone &mdash; and you are paying full price for repeated context every single time.</p>
+
+      <p>In a typical coding session, <strong>roughly 90% of your prompt input is identical across requests</strong>: system prompt, copilot-instructions, active file content. Only your specific question varies. Without caching, full price every time. With caching, <strong>90% less</strong> for tokens the provider has already processed.</p>
+
+      <p>Part 1 covered context engineering &mdash; giving AI better input. This post covers the structural layer on top: caching that clean context so you stop paying for it repeatedly, and workflow discipline that prevents the good habits from eroding.</p>
+
+      <p>The savings here are invisible. You will not feel them in a single prompt. But they compound across every request in every session, every day. For a developer making 100+ AI interactions per day, the cumulative effect is substantial.</p>
+
+      <img src="visuals/prompt-structure-breakdown.png" alt="Prompt structure breakdown: What repeats vs. what changes in your AI coding session">
+
+      <h2>How Prompt Caching Works for AI Code Assistants: Same Prefix, Fraction of the Cost</h2>
+
+      <p>Prompt caching is straightforward. When consecutive prompts share a common prefix &mdash; the same system prompt, the same instruction files, the same contextual setup &mdash; the provider caches those tokens on first processing. Subsequent requests that match the cached prefix get charged dramatically less.</p>
+
+      <ul>
+        <li><strong>OpenAI</strong>: Cached input tokens at 90% off. Caching happens automatically.</li>
+        <li><strong>Anthropic</strong>: Cached reads at 90% off. First-pass cache write costs 1.25x (amortized across subsequent reads).</li>
+        <li><strong>TTL</strong>: Typically 5-10 minutes. Each matching request resets the TTL.</li>
+      </ul>
+
+      <h3>The math</h3>
+
+      <p>A 10,000-token stable prefix over 100 daily requests:</p>
+
+      <table>
+        <thead>
+          <tr><th></th><th>Full price</th><th>With caching</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Prefix tokens processed</td><td>10,000 &times; 100 = 1,000,000</td><td>10,000 + (99 &times; 10,000 &times; 0.1) = 109,000</td></tr>
+          <tr><td>Effective prefix cost</td><td>100%</td><td>~10.9%</td></tr>
+          <tr><td>Savings</td><td>&mdash;</td><td><strong>~89%</strong> on prefix tokens</td></tr>
+        </tbody>
+      </table>
+
+      <p>By request 10, the prefix is essentially free.</p>
+
+      <h3>Maximize cache hits</h3>
+
+      <ul>
+        <li><strong>Keep your copilot-instructions file stable.</strong> Editing it mid-session invalidates the cache and the next request pays full price.</li>
+        <li><strong>Group related questions in the same thread.</strong> Each message extends the shared prefix. Switching threads resets it.</li>
+        <li><strong>Structure context with stable elements first.</strong> System prompt, then instructions, then file content, then your query.</li>
+        <li><strong>Avoid unnecessary context churn.</strong> Adding and removing files repeatedly invalidates cache portions.</li>
+      </ul>
+
+      <p>A critical connection to Part 1: the five context engineering practices <em>enable</em> better caching. Clean context is cacheable context.</p>
+
+      <img src="visuals/caching-flow.png" alt="Caching Flow: By request 10, the prefix is essentially free">
+
+      <h2>The Retry Tax: Reduce AI Coding Retries to Cut Costs</h2>
+
+      <p>Caching reduces the cost of good requests. Workflow discipline reduces the number of bad requests. The combination is multiplicative.</p>
+
+      <p>If 40% of your AI code assistant requests need a follow-up, your effective spend is <strong>1.4x baseline</strong>. At 50%, it is 1.5x. Retries are the most expensive form of wasted tokens &mdash; full-price requests that produced zero usable output.</p>
+
+      <p>GitHub's official guidance: &ldquo;garbage in, garbage out.&rdquo; A vague prompt produces a vague answer, which triggers a retry with more context, which fights the original wrong answer still in the chat history.</p>
+
+      <img src="visuals/retry-loop-anatomy.png" alt="Anatomy of the Retry Loop: How vague prompts compound into wasted tokens">
+
+      <h3>Five disciplines that reduce retries</h3>
+
+      <ol>
+        <li><strong>One task per prompt.</strong> Split bundled requests into focused ones. Three focused requests often cost less than one unfocused request plus two retries.</li>
+        <li><strong>Diagnose before retrying.</strong> Was the context wrong? The prompt ambiguous? A targeted follow-up beats a blind retry.</li>
+        <li><strong>Structured commit messages and PR descriptions.</strong> Clean metadata becomes better AI context for future tasks.</li>
+        <li><strong>Clean project structure.</strong> Meaningful directories and file patterns let the model infer architecture from structure.</li>
+        <li><strong>Measure cost per successful task</strong>, not cost per request.</li>
+      </ol>
+
+      <table>
+        <thead>
+          <tr><th>Retry rate</th><th>Effective cost multiplier</th><th>Monthly impact</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0%</td><td>1.0x</td><td>$30.00</td></tr>
+          <tr><td>20%</td><td>1.2x</td><td>$36.00</td></tr>
+          <tr><td>40%</td><td>1.4x</td><td>$42.00 (+40%)</td></tr>
+          <tr><td>50%</td><td>1.5x</td><td>$45.00 (+50%)</td></tr>
+          <tr><td>60%</td><td>1.6x</td><td>$48.00 (+60%)</td></tr>
+        </tbody>
+      </table>
+
+      <p>Most developers operate in the 30-50% retry range without realizing it.</p>
+
+      <img src="visuals/retry-tax-calculator.png" alt="The Retry Tax: How retry rate multiplies your effective cost">
+
+      <h2>Beyond Prefix Caching: Semantic Caching</h2>
+
+      <p>For high-volume AI workflows, semantic caching stores responses to semantically similar queries. Redis claims up to <strong>68.8% fewer API calls</strong> and 40-50% latency improvement. The trade-off: significant engineering investment, cache staleness risk, and tuning overhead.</p>
+
+      <p><strong>When it makes sense:</strong> repetitive team patterns, high-volume internal Q&A, and when AI API spend justifies engineering effort.</p>
+      <p><strong>When it does not:</strong> novel code generation, debugging sessions, architecture discussions.</p>
+
+      <p>Prefix caching is nearly free and automatic. Semantic caching is an engineering investment. For most developers, prefix caching delivers the majority of savings.</p>
+
+      <img src="visuals/caching-comparison.png" alt="Prefix Caching vs Semantic Caching: Effort, savings, and when to use each">
+
+      <h2>Set and Forget: Your Part 2 Action Plan</h2>
+
+      <ol>
+        <li><strong>Stabilize your copilot-instructions file.</strong> Do not edit mid-session.</li>
+        <li><strong>One thread per task.</strong> Maximizes cache hits and prevents stale context.</li>
+        <li><strong>Diagnose before retrying.</strong> Fix the input, do not retry blindly.</li>
+        <li><strong>Stable context first, specific query last.</strong> Caching-friendly prompt structure.</li>
+      </ol>
+
+      <h2>Coming Up Next</h2>
+
+      <p>In <strong><a href="ai-code-assistant-model-selection-part-3.html">Part 3: "The 120x Spread"</a></strong>, I cover the multiplier table &mdash; from GPT-5.4 nano at 0.25x to Claude Opus 4.6 fast mode at 30x. The task taxonomy, auto-selection, team governance, and the complete three-layer playbook.</p>
+
+      <p><em><a href="ai-code-assistant-context-engineering-part-1.html">&larr; Part 1: Context Engineering</a> | <a href="ai-code-assistant-model-selection-part-3.html">Part 3: The 120x Spread &rarr;</a></em></p>
+
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+
+</body>
+</html>
