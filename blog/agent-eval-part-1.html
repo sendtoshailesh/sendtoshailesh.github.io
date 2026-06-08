@@ -257,11 +257,10 @@ graders:
 <li><strong>The Minimum Viable Eval</strong> &mdash; Two tasks per agent, $0 graders, catches the two most common regressions. Start here.</li>
 </ol>
 <p>But two tasks per agent is just the beginning. The real architecture &mdash; the three-layer grading system, the four task patterns, the full PR-triggered CI pipeline with dynamic agent discovery and mirror sync &mdash; that's where the system scales from "useful sanity check" to "behavioral contract enforcement."</p>
-<p><strong>Part 2: <a href="#">Three Graders, 38 Tasks, Zero Trust</a></strong> goes deep on the grading system. You'll get the full <code>tool_constraint</code> YAML, the LLM judge rubric for gated step-1 tasks, the grading decision tree, and the architectural walkthrough from PR trigger to PR comment. If you want the sourdough regex table, the tool name translation map, and the <code>continue_session: true</code> gotcha that causes 90% of false failures &mdash; that's where it lives.</p>
-<p><strong>Part 3: <a href="#">What Broke, What It Costs, What's Next</a></strong> covers the operational reality &mdash; cost profiles, advisory vs. blocking CI, the tool name translation problem that cost me two days, and the gaps we still haven't closed (multi-turn, adversarial, regression trending).</p>
+<p><strong>Part 2: <a href="agent-eval-part-2.html">Build the Eval System &mdash; Three Graders, 38 Tasks, and the $3-8 Safety Net</a></strong> goes deep on the grading system, the four task patterns, the full CI architecture from PR trigger to PR comment, three real regressions we caught, the $3-8/run cost profile, the gotcha hall of fame, and a 4-week playbook to get started.</p>
 <hr>
 <div class="callout">
-        <p><em>This is Part 1 of a 3-part series. Next: <a href="#">Part 2: Three Graders, 38 Tasks, Zero Trust</a> &mdash; the practitioner's reference for grader design, task taxonomy, and CI architecture.</em></p>
+        <p><em>This is Part 1 of a 2-part series. Next: <a href="agent-eval-part-2.html">Part 2: Build the Eval System &mdash; Three Graders, 38 Tasks, and the $3-8 Safety Net</a> &mdash; the complete practitioner's guide to building and operating agent evals.</em></p>
       </div>
     </div>
   </article>
