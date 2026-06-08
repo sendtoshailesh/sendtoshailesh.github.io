@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Evaluate AI Agents: A 3-Part Series | Shailesh Mishra</title>
+<meta name="description" content="A practitioner's guide to building behavioral evaluation systems for AI agents. From the benchmark gap to the Sourdough Test to operational lessons — based on building a real eval system for 8 Copilot agents with 38 tasks and 3 grader types.">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/series/agent-eval.html">
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/series/agent-eval.html">
+<meta property="og:title" content="How to Evaluate AI Agents: A 3-Part Series | Shailesh Mishra">
+<meta property="og:description" content="A practitioner's guide to building behavioral evaluation systems for AI agents. From the benchmark gap to the Sourdough Test to operational lessons — based on building a real eval system for 8 Copilot agents with 38 tasks and 3 grader types.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/sourdough_test.png">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="How to Evaluate AI Agents: A 3-Part Series">
+<meta name="twitter:description" content="A practitioner's guide to building behavioral evaluation systems for AI agents. From the benchmark gap to the Sourdough Test to operational lessons — based on building a real eval system for 8 Copilot agents with 38 tasks and 3 grader types.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/sourdough_test.png">
+<!-- Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../blog-style.css">
+<style>
+  .series-hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--text-2, #606070); margin-bottom: 2.5rem; }
+  .series-hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.75rem; }
+  .series-meta { font-size: 0.9rem; color: var(--text-1, #a0a0b0); margin-bottom: 1rem; }
+  .series-description { font-size: 1.05rem; line-height: 1.7; max-width: 680px; }
+  .series-what-youll-learn { background: var(--bg-card, #141419); border: 1px solid var(--text-2, #606070); border-radius: 8px; padding: 1.5rem 2rem; margin: 2rem 0; }
+  .series-what-youll-learn h2 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-2, #00d4aa); }
+  .series-what-youll-learn ul { list-style: none; padding: 0; margin: 0; }
+  .series-what-youll-learn li { padding: 0.35rem 0; font-size: 0.95rem; color: var(--text-0, #f0f0f5); }
+  .series-what-youll-learn li::before { content: "→ "; color: var(--accent, #6c63ff); }
+  .series-parts { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem; }
+  .series-part-card { background: var(--bg-card, #141419); border: 1px solid var(--text-2, #606070); border-radius: 10px; padding: 1.75rem 2rem; text-decoration: none; color: inherit; display: block; transition: border-color 0.2s, transform 0.15s; }
+  .series-part-card:hover { border-color: var(--accent, #6c63ff); transform: translateY(-2px); }
+  .part-number { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent, #6c63ff); margin-bottom: 0.5rem; }
+  .part-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.6rem; line-height: 1.4; }
+  .part-excerpt { font-size: 0.95rem; color: var(--text-1, #a0a0b0); line-height: 1.6; margin-bottom: 1rem; }
+  .part-meta { font-size: 0.82rem; color: var(--text-2, #606070); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .part-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .part-tag { background: rgba(108, 99, 255, 0.12); color: var(--accent, #6c63ff); border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.78rem; }
+  .reading-sequence { margin: 2.5rem 0; padding: 1.25rem 1.75rem; border-left: 3px solid var(--accent-2, #00d4aa); background: rgba(0, 212, 170, 0.05); border-radius: 0 6px 6px 0; }
+  .reading-sequence h3 { font-size: 0.9rem; font-weight: 700; color: var(--accent-2, #00d4aa); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .reading-sequence p { font-size: 0.9rem; color: var(--text-1, #a0a0b0); margin: 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../../">Home</a>
+      <a href="../" class="active">Blog</a>
+      <a href="../../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <div class="back-link-wrapper">
+    <a href="../" class="back-link">&larr; All Posts</a>
+  </div>
+
+  <div class="series-hero">
+    <div class="part-number">3-Part Series</div>
+    <h1>How to Evaluate AI Agents Before They Break Production</h1>
+    <div class="series-meta">Shailesh Mishra &middot; July 2025 &middot; ~28 min total reading time</div>
+    <p class="series-description">
+      A practitioner's guide to building behavioral evaluation systems for AI agents. From the benchmark gap
+      to the Sourdough Test to operational lessons — based on building a real eval system for 8 Copilot agents
+      with 38 tasks and 3 grader types.
+    </p>
+  </div>
+
+  <div class="series-what-youll-learn">
+    <h2>What You'll Learn</h2>
+    <ul>
+      <li>Why AI agent benchmarks (SWE-bench 74-78%) don't predict production behavior (35-50% PR acceptance)</li>
+      <li>Three silent failure modes and the grader types designed to catch each one</li>
+      <li>The Sourdough Test — one absurd prompt that catches model-wide persona regressions</li>
+      <li>A three-layer grading system (text, tool_constraint, prompt) with $0 deterministic layers</li>
+      <li>Operational lessons: cost profiles ($3-8/run), advisory vs. blocking CI, and the gotcha hall of fame</li>
+    </ul>
+  </div>
+
+  <div class="reading-sequence">
+    <h3>Reading Sequence</h3>
+    <p>
+      Read Part 1 now, then come back for Parts 2 and 3 as they publish.
+      The series moves from why behavioral evals matter to how the grading system works to what broke in practice.
+    </p>
+  </div>
+
+  <div class="series-parts">
+
+    <a href="../agent-eval-part-1.html" class="series-part-card">
+      <div class="part-number">Part 1 of 3</div>
+      <div class="part-title">The Gap Nobody's Testing For</div>
+      <p class="part-excerpt">
+        Your AI agent scores 78% on SWE-bench. It also just claimed it deployed infrastructure without calling a
+        single tool. Part 1 introduces the benchmark gap, the failure taxonomy, the Sourdough Test, and the
+        minimum viable eval I recommend before any agent reaches production.
+      </p>
+      <div class="part-meta">
+        <span>July 17, 2025 &middot; 13 min read</span>
+        <div class="part-tags">
+          <span class="part-tag">ai-agent-evaluation</span>
+          <span class="part-tag">behavioral-evals</span>
+          <span class="part-tag">sourdough-test</span>
+        </div>
+      </div>
+    </a>
+
+    <div class="series-part-card" style="opacity: 0.6; cursor: default;">
+      <div class="part-number">Part 2 of 3 &middot; Coming Soon</div>
+      <div class="part-title">Three Graders, 38 Tasks, Zero Trust</div>
+      <p class="part-excerpt">
+        The architecture behind the eval system: text graders, tool constraints, prompt-judged step checks,
+        and the task taxonomy that turns a handful of sanity checks into a CI-ready behavioral contract.
+      </p>
+      <div class="part-meta">
+        <span>Not yet published</span>
+        <div class="part-tags">
+          <span class="part-tag">grading-system</span>
+          <span class="part-tag">ci-evals</span>
+          <span class="part-tag">coming-soon</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="series-part-card" style="opacity: 0.6; cursor: default;">
+      <div class="part-number">Part 3 of 3 &middot; Coming Soon</div>
+      <div class="part-title">What Broke, What It Costs, What's Next</div>
+      <p class="part-excerpt">
+        The operational lessons from running agent evals in the real world: run cost, advisory vs. blocking CI,
+        failure analysis, and the gotchas that only appear after you wire the whole system into delivery workflows.
+      </p>
+      <div class="part-meta">
+        <span>Not yet published</span>
+        <div class="part-tags">
+          <span class="part-tag">operational-lessons</span>
+          <span class="part-tag">cost-profile</span>
+          <span class="part-tag">coming-soon</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout" style="margin-top: 3rem;">
+    <strong>Start with Part 1.</strong> It gives you the benchmark gap, the Sourdough Test, and the two-task eval
+    you can apply before your next model upgrade. <a href="../agent-eval-part-1.html">Read Part 1 &rarr;</a>
+  </div>
+</main>
+
+<footer class="blog-footer">
+  <div class="footer-inner">
+    <span>&copy; 2025 Shailesh Mishra</span>
+    <nav>
+      <a href="https://github.com/sendtoshailesh" rel="noopener" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/sendtoshailesh" rel="noopener" target="_blank">LinkedIn</a>
+      <a href="https://x.com/sendtoshailesh" rel="noopener" target="_blank">X</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
