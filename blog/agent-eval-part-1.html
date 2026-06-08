@@ -3,19 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SWE-bench Isn't Enough: How to Evaluate AI Agents Before They Break Production (Part 1 of 2) | Shailesh Mishra</title>
+  <title>AI Agent Evals: Why SWE-bench Isn't Enough Before Production (Part 1 of 2) | Shailesh Mishra</title>
   <meta name="description" content="SWE-bench scores are not enough for production AI agents. Learn the Sourdough Test, silent failure taxonomy, and a two-task eval engineers can run pre-release.">
   <meta name="author" content="Shailesh Mishra">
   <meta name="keywords" content="evaluate AI agents, AI agent evaluation, agent evals, AI agent regression testing">
   <link rel="canonical" href="https://sendtoshailesh.github.io/blog/agent-eval-part-1.html">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://sendtoshailesh.github.io/blog/agent-eval-part-1.html">
-<meta property="og:title" content="SWE-bench Isn't Enough: How to Evaluate AI Agents Before Production Breaks">
+<meta property="og:title" content="AI Agent Evals: Why SWE-bench Isn't Enough Before Production">
 <meta property="og:description" content="SWE-bench scores are not enough for production AI agents. Learn the Sourdough Test, silent failure taxonomy, and a two-task eval engineers can run pre-release.">
 <meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/sourdough_test.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@sendtoshailesh">
-<meta name="twitter:title" content="SWE-bench Isn't Enough: How to Evaluate AI Agents Before Production Breaks">
+<meta name="twitter:title" content="AI Agent Evals: Why SWE-bench Isn't Enough Before Production">
 <meta name="twitter:description" content="SWE-bench scores are not enough for production AI agents. Learn the Sourdough Test, silent failure taxonomy, and a two-task eval engineers can run pre-release.">
 <meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/sourdough_test.png">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
@@ -43,7 +43,7 @@
 
   <article>
     <div class="post-header">
-      <h1>SWE-bench Isn't Enough: How to Evaluate AI Agents Before They Break Production</h1>
+      <h1>AI Agent Evals: Why SWE-bench Isn't Enough Before Production</h1>
       <div class="meta">Shailesh Mishra &middot; July 17, 2025 &middot; 13 min read</div>
       <div style="margin-top: 0.75rem;">
         <span class="tag">ai-agent-evaluation</span>
@@ -55,7 +55,7 @@
 
     <div class="post-content">
       <h2>Part 1: The Gap SWE-bench Doesn't Test For</h2>
-<p><em>Part 1 of 2 in the series "SWE-bench Isn't Enough: How to Evaluate AI Agents Before They Break Production"</em></p>
+<p><em>Part 1 of 2 in the series "AI Agent Evals: Why SWE-bench Isn't Enough Before Production"</em></p>
 <hr>
 <h3>The Agent That Lied</h3>
 <p>Here's the output from an agent eval run I'll never forget:</p>
