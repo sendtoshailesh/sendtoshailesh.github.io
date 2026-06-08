@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>How to Evaluate AI Agents Before They Break Production (Part 1 of 3) | Shailesh Mishra</title>
-  <meta name="description" content="Learn how to evaluate AI agents for silent failures before production: benchmark gaps, the Sourdough Test, and a two-task eval engineers can run pre-release.">
+  <title>SWE-bench Isn't Enough: How to Evaluate AI Agents Before They Break Production (Part 1 of 3) | Shailesh Mishra</title>
+  <meta name="description" content="SWE-bench scores are not enough for production AI agents. Learn the Sourdough Test, silent failure taxonomy, and a two-task eval engineers can run pre-release.">
   <meta name="author" content="Shailesh Mishra">
   <meta name="keywords" content="evaluate AI agents, AI agent evaluation, agent evals, AI agent regression testing">
   <link rel="canonical" href="https://sendtoshailesh.github.io/blog/agent-eval-part-1.html">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://sendtoshailesh.github.io/blog/agent-eval-part-1.html">
-<meta property="og:title" content="How to Evaluate AI Agents Before Production Breaks">
-<meta property="og:description" content="Learn how to evaluate AI agents for silent failures before production: benchmark gaps, the Sourdough Test, and a two-task eval engineers can run pre-release.">
+<meta property="og:title" content="SWE-bench Isn't Enough: How to Evaluate AI Agents Before Production Breaks">
+<meta property="og:description" content="SWE-bench scores are not enough for production AI agents. Learn the Sourdough Test, silent failure taxonomy, and a two-task eval engineers can run pre-release.">
 <meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/sourdough_test.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@sendtoshailesh">
-<meta name="twitter:title" content="How to Evaluate AI Agents Before Production Breaks">
-<meta name="twitter:description" content="Learn how to evaluate AI agents for silent failures before production: benchmark gaps, the Sourdough Test, and a two-task eval engineers can run pre-release.">
+<meta name="twitter:title" content="SWE-bench Isn't Enough: How to Evaluate AI Agents Before Production Breaks">
+<meta name="twitter:description" content="SWE-bench scores are not enough for production AI agents. Learn the Sourdough Test, silent failure taxonomy, and a two-task eval engineers can run pre-release.">
 <meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/sourdough_test.png">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,7 +43,7 @@
 
   <article>
     <div class="post-header">
-      <h1>How to Evaluate AI Agents Before They Break Production &mdash; The Sourdough Test &amp; Beyond</h1>
+      <h1>SWE-bench Isn't Enough: How to Evaluate AI Agents Before They Break Production</h1>
       <div class="meta">Shailesh Mishra &middot; July 17, 2025 &middot; 13 min read</div>
       <div style="margin-top: 0.75rem;">
         <span class="tag">ai-agent-evaluation</span>
@@ -54,8 +54,8 @@
     </div>
 
     <div class="post-content">
-      <h2>Part 1: The Gap Nobody's Testing For</h2>
-<p><em>Part 1 of 3 in the series "How to Evaluate AI Agents Before They Break Production"</em></p>
+      <h2>Part 1: The Gap SWE-bench Doesn't Test For</h2>
+<p><em>Part 1 of 3 in the series "SWE-bench Isn't Enough: How to Evaluate AI Agents Before They Break Production"</em></p>
 <hr>
 <h3>The Agent That Lied</h3>
 <p>Here's the output from an agent eval run I'll never forget:</p>
@@ -114,7 +114,7 @@
 <h3>Why Now: Agents Are Getting Real Credentials</h3>
 <p>A year ago, this was an academic concern. AI coding assistants suggested code, you reviewed it, and the human was the safety net. The worst case was a bad suggestion you could ignore.</p>
 <p>That's not the world we live in anymore.</p>
-<p>In the system I built evals for &mdash; Git-Ape, an internal GitHub Copilot project &mdash; agents operate with real credentials and real consequences:</p>
+<p>In the system I built evals for &mdash; <a href="https://github.com/Azure/git-ape">Git-Ape</a>, the public Azure infrastructure automation repo under <code>Azure/git-ape</code> &mdash; agents operate with real credentials and real consequences:</p>
 <ul>
 <li>An <strong>Azure Resource Deployer</strong> agent creates infrastructure with real billing implications</li>
 <li>An <strong>Onboarding</strong> agent configures OIDC credentials and RBAC permissions</li>
