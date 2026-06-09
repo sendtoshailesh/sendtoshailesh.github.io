@@ -152,16 +152,8 @@
 
       <p>Agent evals become real when they run where engineering decisions already happen: pull requests.</p>
 
-      <pre><code class="language-mermaid">flowchart LR
-    A[Agent change or prompt update] --&gt; B[Task suite]
-    B --&gt; C[Behavior graders]
-    C --&gt; D{Regression gate}
-    D --&gt;|Pass| E[Ship to production]
-    D --&gt;|Fail| F[Debug trace]
-    F --&gt; G[Fix prompt, tool policy, or guardrail]
-    G --&gt; B
-    C --&gt; H[Eval history dashboard]
-    H --&gt; I[Release review]</code></pre>
+      <img src="visuals/distilled/agent-eval-visual-first/eval-ci-architecture.png" alt="CI eval-gate loop: an agent or prompt change runs the task suite and behavior graders, hits a regression gate that either ships to production (pass) or routes to debug trace then a fix that re-enters the task suite (fail); graders also feed an eval history dashboard into release review">
+
 
       <p>The loop is intentionally boring:</p>
 
