@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Code Assistant Optimization: A 3-Part Series | Shailesh Mishra</title>
+<meta name="description" content="A complete guide to getting more from your AI code assistant: context engineering, caching and workflow discipline, and model selection. Three practical posts with benchmarks and real-world patterns.">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/series/ai-code-assistant-optimization.html">
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/series/ai-code-assistant-optimization.html">
+<meta property="og:title" content="AI Code Assistant Optimization: A 3-Part Series | Shailesh Mishra">
+<meta property="og:description" content="Context engineering, caching, and model selection — three practical posts on getting more from your AI code assistant.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="AI Code Assistant Optimization: A 3-Part Series">
+<meta name="twitter:description" content="Context engineering, caching, and model selection — three practical posts on getting more from your AI code assistant.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/og-image.svg">
+<!-- Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../blog-style.css">
+<style>
+  .series-hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--text-2, #606070); margin-bottom: 2.5rem; }
+  .series-hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.75rem; }
+  .series-meta { font-size: 0.9rem; color: var(--text-1, #a0a0b0); margin-bottom: 1rem; }
+  .series-description { font-size: 1.05rem; line-height: 1.7; max-width: 680px; }
+  .series-what-youll-learn { background: var(--bg-card, #141419); border: 1px solid var(--text-2, #606070); border-radius: 8px; padding: 1.5rem 2rem; margin: 2rem 0; }
+  .series-what-youll-learn h2 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent-2, #00d4aa); }
+  .series-what-youll-learn ul { list-style: none; padding: 0; margin: 0; }
+  .series-what-youll-learn li { padding: 0.35rem 0; font-size: 0.95rem; color: var(--text-0, #f0f0f5); }
+  .series-what-youll-learn li::before { content: "→ "; color: var(--accent, #6c63ff); }
+  .series-parts { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 2rem; }
+  .series-part-card { background: var(--bg-card, #141419); border: 1px solid var(--text-2, #606070); border-radius: 10px; padding: 1.75rem 2rem; text-decoration: none; color: inherit; display: block; transition: border-color 0.2s, transform 0.15s; }
+  .series-part-card:hover { border-color: var(--accent, #6c63ff); transform: translateY(-2px); }
+  .part-number { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent, #6c63ff); margin-bottom: 0.5rem; }
+  .part-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.6rem; line-height: 1.4; }
+  .part-excerpt { font-size: 0.95rem; color: var(--text-1, #a0a0b0); line-height: 1.6; margin-bottom: 1rem; }
+  .part-meta { font-size: 0.82rem; color: var(--text-2, #606070); display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+  .part-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .part-tag { background: rgba(108, 99, 255, 0.12); color: var(--accent, #6c63ff); border-radius: 4px; padding: 0.2rem 0.6rem; font-size: 0.78rem; }
+  .reading-sequence { margin: 2.5rem 0; padding: 1.25rem 1.75rem; border-left: 3px solid var(--accent-2, #00d4aa); background: rgba(0, 212, 170, 0.05); border-radius: 0 6px 6px 0; }
+  .reading-sequence h3 { font-size: 0.9rem; font-weight: 700; color: var(--accent-2, #00d4aa); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .reading-sequence p { font-size: 0.9rem; color: var(--text-1, #a0a0b0); margin: 0; line-height: 1.6; }
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../../">Home</a>
+      <a href="../" class="active">Blog</a>
+      <a href="../../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <div class="back-link-wrapper">
+    <a href="../" class="back-link">&larr; All Posts</a>
+  </div>
+
+  <div class="series-hero">
+    <div class="part-number">3-Part Series</div>
+    <h1>AI Code Assistant Optimization</h1>
+    <div class="series-meta">Shailesh Mishra &middot; May 2026 &middot; ~32 min total reading time</div>
+    <p class="series-description">
+      Most teams use AI code assistants reactively — they paste questions, get answers, and move on.
+      This series covers three layers of optimization that compound: spending context wisely (Part 1),
+      eliminating redundant work through caching and workflow discipline (Part 2), and matching model
+      capability to task complexity to control cost without sacrificing quality (Part 3).
+    </p>
+  </div>
+
+  <div class="series-what-youll-learn">
+    <h2>What You'll Learn</h2>
+    <ul>
+      <li>Five context engineering practices that improve accuracy while reducing token spend by 30–50%</li>
+      <li>How prompt caching at 90% discount compounds with retry elimination into structural cost savings</li>
+      <li>Why a 120x cost spread exists across AI models and when it actually matters for code tasks</li>
+      <li>A three-tier task taxonomy for routing work to the right model (flash, balanced, frontier)</li>
+      <li>The complete three-layer optimization playbook: context + caching + model selection</li>
+    </ul>
+  </div>
+
+  <div class="reading-sequence">
+    <h3>Reading Sequence</h3>
+    <p>
+      Read in order for the full compounding effect — each part builds on the previous.
+      Or jump directly to the topic most relevant to your current bottleneck.
+    </p>
+  </div>
+
+  <div class="series-parts">
+
+    <a href="../ai-code-assistant-context-engineering-part-1.html" class="series-part-card">
+      <div class="part-number">Part 1 of 3</div>
+      <div class="part-title">Spend Fewer Tokens, Get Better Code: A Context Engineering Guide for AI Code Assistants</div>
+      <p class="part-excerpt">
+        Anthropic cut tool context by 85% in one experiment. Accuracy improved from 49% to 74%.
+        Five context engineering practices — precise scoping, structured file references, explicit constraints,
+        incremental sessions, and post-task cleanup — that make your AI code assistant produce better output
+        while spending fewer tokens.
+      </p>
+      <div class="part-meta">
+        <span>May 7, 2026 &middot; 12 min read</span>
+        <div class="part-tags">
+          <span class="part-tag">context-engineering</span>
+          <span class="part-tag">github-copilot</span>
+          <span class="part-tag">ai-code-assistant</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="../ai-code-assistant-caching-workflow-part-2.html" class="series-part-card">
+      <div class="part-number">Part 2 of 3</div>
+      <div class="part-title">Invisible Compound Savings: Caching, Workflow Discipline, and the Habits That Add Up</div>
+      <p class="part-excerpt">
+        90% of your AI prompt context repeats across every request. OpenAI and Anthropic offer 90% off
+        cached tokens. Here is how prompt caching and retry elimination compound into structural savings —
+        and the workflow habits that make caching actually work in practice.
+      </p>
+      <div class="part-meta">
+        <span>May 11, 2026 &middot; 10 min read</span>
+        <div class="part-tags">
+          <span class="part-tag">prompt-caching</span>
+          <span class="part-tag">cost-optimization</span>
+          <span class="part-tag">workflow</span>
+        </div>
+      </div>
+    </a>
+
+    <a href="../ai-code-assistant-model-selection-part-3.html" class="series-part-card">
+      <div class="part-number">Part 3 of 3</div>
+      <div class="part-title">The 120x Spread: Understanding What You Pay For and When It Matters</div>
+      <p class="part-excerpt">
+        The cheapest AI model costs $0.025/MTok. The most expensive costs $30/MTok. A 1,200x spread.
+        A three-tier task taxonomy for matching model capability to task complexity — flash models for
+        boilerplate, balanced for logic, frontier for architecture — plus the complete three-layer
+        optimization playbook that combines all three series principles.
+      </p>
+      <div class="part-meta">
+        <span>May 11, 2026 &middot; 10 min read</span>
+        <div class="part-tags">
+          <span class="part-tag">model-selection</span>
+          <span class="part-tag">cost-optimization</span>
+          <span class="part-tag">ai-code-assistant</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="callout" style="margin-top: 3rem;">
+    <strong>More from this author:</strong> Field notes and technical deep-dives on AI, PostgreSQL, and cloud engineering.
+    <a href="../">Browse all posts &rarr;</a>
+  </div>
+</main>
+
+<footer class="blog-footer">
+  <div class="footer-inner">
+    <span>&copy; 2026 Shailesh Mishra</span>
+    <nav>
+      <a href="https://github.com/sendtoshailesh" rel="noopener" target="_blank">GitHub</a>
+      <a href="https://linkedin.com/in/sendtoshailesh" rel="noopener" target="_blank">LinkedIn</a>
+      <a href="https://x.com/sendtoshailesh" rel="noopener" target="_blank">X</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
