@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How AI Actually Helps You Fix PostgreSQL Performance Problems (and Where It Lies) | Shailesh Mishra</title>
+<meta name="description" content="A DBA's field guide to using AI/LLMs for PostgreSQL performance — triage, EXPLAIN reading, index advice, anomaly detection — grounded in real stats, with before/after examples.">
+<meta name="author" content="Shailesh Mishra">
+<meta name="keywords" content="PostgreSQL performance, AI database tuning, EXPLAIN ANALYZE, pg_stat_statements, pgvector HNSW IVFFlat, hypopg, autovacuum, Postgres MCP, pganalyze, DevOps Guru for RDS">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/ai-postgresql-performance.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/ai-postgresql-performance.html">
+<meta property="og:title" content="How AI Actually Helps You Fix PostgreSQL Performance Problems (and Where It Lies)">
+<meta property="og:description" content="A DBA's field guide to using AI/LLMs for PostgreSQL performance — triage, EXPLAIN reading, index advice, anomaly detection — grounded in real stats, with before/after examples.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/hero.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="How AI Actually Helps You Fix PostgreSQL Performance Problems (and Where It Lies)">
+<meta name="twitter:description" content="A DBA's field guide to using AI/LLMs for PostgreSQL performance — triage, EXPLAIN reading, index advice, anomaly detection — grounded in real stats, with before/after examples.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/hero.png">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>How AI Actually Helps You Fix PostgreSQL Performance Problems (and Where It Lies)</h1>
+      <div class="meta">Shailesh Mishra &middot; June 11, 2026 &middot; 13 min read</div>
+      <div class="tags">
+        <span class="post-tag">postgresql</span>
+        <span class="post-tag">ai-database-tuning</span>
+        <span class="post-tag">explain-analyze</span>
+        <span class="post-tag">pgvector</span>
+        <span class="post-tag">hypopg</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+      <img src="visuals/hero.png" alt="Fixing Postgres performance with AI — a DBA's field guide">
+
+      <p>It's 2 a.m. and p99 on the orders API just jumped from 90 ms to 6 seconds. You know this dance: tail the logs, pull the offending query, run <code>EXPLAIN</code>, squint at a plan, form a theory, test it, repeat. On a bad night that loop runs an hour before you find the seq scan hiding behind a function call on an indexed column.</p>
+
+      <p>I've spent a lot of time in that loop with customers' Postgres fleets, and over the last year I started feeding parts of it to LLMs. My honest verdict: AI will <em>not</em> replace your <code>EXPLAIN ANALYZE</code> instincts, and anyone selling "autonomous database tuning" is selling you a 2 a.m. outage. But pointed at the right four steps — triage, plan reading, index suggestions, and anomaly detection — and <strong>grounded in your real statistics</strong>, it compresses that diagnose-to-fix loop from an hour to a few minutes.</p>
+
+      <p>This is a field guide to where that works, where it confidently lies to you, and how to keep a human in the loop.</p>
+
+      <img src="visuals/loop-diagram.png" alt="The diagnose-to-fix loop: old grep/EXPLAIN/guess vs the AI-assisted ground/triage/suggest/validate/measure path">
+
+      <h2>The honest baseline: what AI can and can't see</h2>
+
+      <p>Here is the single most important thing to internalize before you trust a word an LLM says about your database: <strong>it cannot see your database.</strong> It doesn't know your Postgres version, your <code>shared_buffers</code>, your table sizes, your <code>pg_stat_statements</code>, your buffer hit ratio, or that one table that's 40% dead tuples. Out of the box it's a very well-read DBA who has never logged into your server.</p>
+
+      <p>That gap produces three failure modes I see constantly:</p>
+
+      <ol>
+        <li><strong>Hallucinated internals.</strong> Ask a generic model "how do I see index bloat in Postgres" and you'll sometimes get a confidently-wrong <code>pg_stat</code> column that doesn't exist, or a <code>pgstattuple</code> call with the wrong signature. It reads plausible; it doesn't run.</li>
+        <li><strong>Stale defaults.</strong> Models are trained on a decade of mixed-version Postgres content. Ask about <code>work_mem</code> and you may get advice that treats the 4 MB default as a single global budget — when it's actually allocated <em>per sort/hash operation, per connection</em>, and can multiply across parallel workers — alongside pre-13 autovacuum assumptions, ignoring that parallel query (PG 9.6+), JIT (PG 11+), and B-tree deduplication (PG 13+) each changed the calculus.</li>
+        <li><strong>Confident rewrites that change results.</strong> "Just replace the correlated subquery with a <code>LEFT JOIN</code>" — except the join multiplies rows and your <code>COUNT</code> is now wrong. The model has no way to know your data distribution.</li>
+      </ol>
+
+      <p>This is exactly the "teach an LLM what it doesn't know about PostgreSQL" problem: the model's prior is generic, and your database is specific. And there's hard data on how wide that gap is. On the <a href="https://bird-bench.github.io/" target="_blank" rel="noopener">BIRD benchmark</a> — text-to-SQL over 95 real, messy databases — GPT-4 scores <strong>54.89%</strong> execution accuracy <em>with</em> curated external knowledge about the data, and just <strong>34.88%</strong> without it, versus <strong>92.96%</strong> for expert humans. That's a ~38-point gap on getting SQL merely <em>correct</em> against real data, before you even ask whether it's <em>fast</em>. The lesson isn't "AI is useless"; it's that the model's accuracy is dominated by how much real context you give it.</p>
+
+      <p>So the entire game is <strong>grounding</strong> — every prompt that matters carries real evidence:</p>
+
+      <ul>
+        <li>the exact <code>EXPLAIN (ANALYZE, BUFFERS)</code> output (actual rows, actual timings, actual buffer hits),</li>
+        <li>the relevant rows from <code>pg_stat_statements</code> (calls, <code>mean_exec_time</code>, <code>rows</code>),</li>
+        <li>your <code>SELECT version();</code> and the non-default settings from <code>pg_settings</code>.</li>
+      </ul>
+
+      <p>Feed those, and the same model goes from horoscope to genuinely useful. Withhold them, and you're just autocompleting Stack Overflow.</p>
+
+      <h2>Where AI genuinely helps (and where it doesn't)</h2>
+
+      <p>Across the performance workflow, the value is wildly uneven. Here's the map I use.</p>
+
+      <img src="visuals/ai-help-matrix.png" alt="Matrix: where AI helps vs hurts across triage, plan reading, index advice, anomaly detection, and internals/DDL">
+
+      <p><strong>1. Triage and summarization — high value.</strong> <code>pg_stat_statements</code> on a busy system has thousands of rows. Pasting the top 20 by <code>total_exec_time</code> and asking "group these by likely root cause and rank what to investigate first" is genuinely great. The model is doing pattern-matching and summarization — exactly its strength — and the stats are real, so it can't hallucinate the workload. Same for RDS Performance Insights: dump the top SQL by DB load and wait event, and let it narrate "you're bottlenecked on <code>LWLock:BufferContent</code>, not CPU."</p>
+
+      <p><strong>2. Reading plans in plain English — high value, with a catch.</strong> Hand a model an <code>EXPLAIN (ANALYZE, BUFFERS)</code> tree and "explain why this is slow," and it will reliably spot the seq scan, the bad row estimate (estimated 12 rows, actual 2.1 million), the nested loop that should be a hash join, the external merge sort spilling to disk. The catch: it explains the plan it was <em>given</em>. If you paste <code>EXPLAIN</code> without <code>ANALYZE</code>, it's reasoning about estimates, not reality — and so are you.</p>
+
+      <p><strong>3. Index and rewrite suggestions — medium value, never auto-apply.</strong> This is where AI is a strong candidate-generator and a terrible decision-maker. It will propose sensible indexes and rewrites, but it can't know whether a new index will wreck your write throughput, duplicate an existing one, or never get chosen by the planner. Treat every suggestion as a hypothesis to validate — which is what <code>hypopg</code> is for (more below).</p>
+
+      <p><strong>4. Anomaly detection — high value, but that's classic ML, not LLMs.</strong> "AI for Postgres performance" mostly means time-series anomaly detection here: AWS DevOps Guru for RDS learns your DB-load baseline and flags deviations with probable causes; pganalyze surfaces regressions in query plans and index usage. These aren't chatbots — they're trained models on your metrics, and they're the most mature, lowest-risk AI in this whole space.</p>
+
+      <p><strong>5. Internals, DDL, and "just run this" — low value / high risk.</strong> Generating migrations, lock analysis, or <code>VACUUM FULL</code> advice from a generic model is where the hallucinated-internals and stale-defaults failures bite hardest, and the blast radius is your production data. Keep humans firmly in front of anything that takes a lock or changes schema.</p>
+
+      <h2>Real example 1: the missing composite index</h2>
+
+      <p>A multi-tenant SaaS dashboard query, on a ~50M-row <code>events</code> table:</p>
+
+      <pre><code class="language-sql">SELECT * FROM events
+WHERE tenant_id = $1 AND date_trunc('day', created_at) = $2
+ORDER BY created_at DESC LIMIT 50;</code></pre>
+
+      <p>Mean latency from <code>pg_stat_statements</code>: ~4,200 ms. I pasted the <code>EXPLAIN (ANALYZE, BUFFERS)</code> into Claude with the table's row count and existing indexes (a lone index on <code>tenant_id</code>). It immediately flagged two things a tired human misses at 2 a.m.:</p>
+
+      <ul>
+        <li>the <code>date_trunc('day', created_at) = $2</code> predicate is <strong>non-sargable</strong> — wrapping the column in a function means the existing index can't be used for that filter, forcing a filter-after-scan;</li>
+        <li>there's no composite index supporting <code>(tenant_id, created_at)</code>, so the <code>ORDER BY ... LIMIT</code> can't be satisfied by an index walk.</li>
+      </ul>
+
+      <p>Its suggestion: rewrite the predicate as a half-open range and add a composite index.</p>
+
+      <pre><code class="language-sql">-- rewrite: sargable range instead of a function on the column
+WHERE tenant_id = $1
+  AND created_at &gt;= $2::date
+  AND created_at &lt;  ($2::date + INTERVAL '1 day')
+ORDER BY created_at DESC LIMIT 50;
+
+CREATE INDEX CONCURRENTLY idx_events_tenant_created
+  ON events (tenant_id, created_at DESC);</code></pre>
+
+      <p>Here's the part that matters: <strong>I did not run <code>CREATE INDEX</code> on the model's say-so.</strong> I validated the hypothesis first with <code>hypopg</code>, which creates a <em>hypothetical</em> index so the planner will cost it without building anything:</p>
+
+      <pre><code class="language-sql">SELECT * FROM hypopg_create_index(
+  'CREATE INDEX ON events (tenant_id, created_at DESC)');
+EXPLAIN  -- replan with the hypothetical index; confirm Index Scan + low cost
+SELECT ... ;</code></pre>
+
+      <p>The plan flipped from a Seq Scan + Sort to an Index Scan, so I built it for real with <code>CONCURRENTLY</code> (which builds without blocking reads or writes). After: ~38 ms — about a <strong>110× improvement</strong>, illustrative of a composite-index win I see often. The AI didn't do anything I couldn't have; it just got me to the right hypothesis in 30 seconds instead of 30 minutes, and <code>hypopg</code> — not the model — made it safe.</p>
+
+      <img src="visuals/before-after-latency.png" alt="Before/after query latency: 4,200 ms (seq scan + sort) vs 38 ms (composite index), log scale, ~110x faster">
+
+      <h2>Real example 2: bloat and autovacuum starvation</h2>
+
+      <p>Writes on a high-churn <code>sessions</code> table had slowed, and the table was bigger on disk than its live data justified. <code>pg_stat_user_tables</code> told the real story:</p>
+
+      <pre><code class="language-sql">SELECT relname, n_live_tup, n_dead_tup,
+       last_autovacuum, autovacuum_count
+FROM pg_stat_user_tables WHERE relname = 'sessions';</code></pre>
+
+      <p><code>n_dead_tup</code> was climbing into the millions and <code>last_autovacuum</code> was hours stale. I gave the model those numbers plus the cluster's autovacuum settings. It correctly explained the mechanism: autovacuum triggers at <code>autovacuum_vacuum_threshold + autovacuum_vacuum_scale_factor * n_live_tup</code>, and with the default scale factor of <strong>0.2</strong> on a large, hot table, the trigger point is so high the table bloats badly between runs. Its fix — lower the scale factor <em>for that table only</em>:</p>
+
+      <pre><code class="language-sql">ALTER TABLE sessions SET (
+  autovacuum_vacuum_scale_factor = 0.02,
+  autovacuum_vacuum_cost_limit   = 2000);</code></pre>
+
+      <p>This is a good example of the division of labor. The model nailed the <em>mechanism and the knob</em>, which is textbook and well-grounded. But the <em>values</em> are workload-dependent — I treated 0.02 as a starting hypothesis, watched <code>n_dead_tup</code> and <code>last_autovacuum</code> over the next day, and tuned from there. If I'd let it pick numbers blind, it would have guessed; with real stats in front of it, it reasoned.</p>
+
+      <h2>Real example 3: connection storms and wait events</h2>
+
+      <p>A deploy doubled traffic and latency went non-linear. CPU was fine. The tell was in <code>pg_stat_activity</code>:</p>
+
+      <pre><code class="language-sql">SELECT wait_event_type, wait_event, state, count(*)
+FROM pg_stat_activity
+GROUP BY 1,2,3 ORDER BY 4 DESC;</code></pre>
+
+      <p>Hundreds of connections, most <code>idle in transaction</code> or waiting on <code>Client</code>/<code>LWLock</code>. I described the shape to the model; it correctly diagnosed connection saturation rather than a slow query — Postgres's per-connection backend model means thousands of connections is a problem in itself — and pointed at a pooler (PgBouncer in transaction mode, or RDS Proxy on AWS). The fix was a pooler plus hunting down the app code leaving transactions open.</p>
+
+      <p>The caveat worth repeating: the model gave the <em>right category</em> of answer because I gave it the <em>right signal</em> (wait events, connection counts). Ask it "why is Postgres slow after a deploy" with no data and it'll happily lecture you about missing indexes while your real problem is 2,000 idle connections.</p>
+
+      <h2>Real example 4: tuning the AI workload that now lives <em>inside</em> Postgres</h2>
+
+      <p>There's a second meaning to "AI and Postgres performance" that's easy to miss: more and more of the AI workload now <em>runs in Postgres</em>, via <code>pgvector</code> for semantic search and RAG. And vector indexes have their own brutal tuning trade-off that an LLM will happily get wrong if you don't feed it numbers.</p>
+
+      <p>The two index types — IVFFlat and HNSW — are not interchangeable. On a representative benchmark of 500K 768-dimension vectors (<a href="https://markaicode.com/benchmarks/postgresql-pgvector-benchmark/" target="_blank" rel="noopener">markaicode</a>, corroborated by <a href="https://bigdataboutique.com/blog/hnsw-vs-ivfflat-how-to-choose-the-right-vector-index" target="_blank" rel="noopener">BigDataBoutique</a> and the <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">pgvector docs</a>):</p>
+
+      <ul>
+        <li><strong>HNSW</strong>: p50 ~4 ms, p95 ~8 ms at ~99% recall — but the index takes ~14 minutes to build and uses more RAM.</li>
+        <li><strong>IVFFlat</strong>: p50 ~18 ms, p95 ~35 ms at ~97.5% recall — but builds ~7× faster (~2 minutes) and uses ~20–25% less memory.</li>
+      </ul>
+
+      <p>So HNSW is roughly 3–5× faster on queries at comparable recall, at the cost of build time and memory. The right call depends on dataset size, write rate, and your latency budget — context an LLM doesn't have unless you give it. The failure mode I see: someone asks a chatbot "which pgvector index should I use," gets a confident "HNSW, always," and then watches index builds dominate their batch window on a 50M-row table that rebuilds nightly. Feed the model your row count, write pattern, recall target, and latency SLO, and the <em>same</em> question produces a genuinely useful answer. Same lesson as the relational side: grounding turns a horoscope into engineering.</p>
+
+      <h2>Wiring AI into the loop safely</h2>
+
+      <p>The pattern that's changed how I work is connecting the model to <strong>live, read-only</strong> stats instead of copy-pasting. Postgres MCP servers expose database tools to an assistant over a controlled connection. The open-source <a href="https://github.com/crystaldba/postgres-mcp" target="_blank" rel="noopener"><code>postgres-mcp</code> ("Postgres MCP Pro")</a> is the most complete one I've used: it does <strong>index tuning</strong> by exploring "thousands of possible indexes... using industrial-strength algorithms," validates <strong>query plans</strong> by simulating hypothetical indexes (i.e., <code>hypopg</code> under the hood), runs <strong>database health</strong> checks (index health, buffer cache, vacuum health, replication lag, sequence limits), and — critically — supports a <strong>read-only / safe-SQL mode</strong> for production. In Crystal DBA's own write-up, they took an AI-generated movie app whose SQLAlchemy ORM queries were "painfully slow" and fixed the indexing and query issues "in minutes" by letting the agent explore the schema and simulate indexes — exactly the grounded, validated loop this whole post argues for.</p>
+
+      <p>My rules for wiring it in:</p>
+
+      <ul>
+        <li><strong>Read-only by default.</strong> A dedicated role with <code>SELECT</code> on the stats views and <code>pg_monitor</code> membership — never a superuser, never DDL. (Postgres MCP Pro's <code>--access-mode</code> defaults matter here.)</li>
+        <li><strong>Never auto-apply DDL or DML.</strong> Index creation, <code>ALTER TABLE</code>, <code>VACUUM</code> — human runs these, after validation. <code>hypopg</code> for index hypotheses; a staging replica for anything heavier.</li>
+        <li><strong>Pin the version and settings</strong> in the context so advice matches <em>your</em> Postgres, not the internet's average Postgres.</li>
+        <li><strong>Validate, then measure.</strong> Every change gets a before/after on <code>mean_exec_time</code> or DB load — the same discipline you'd apply to a human's suggestion.</li>
+      </ul>
+
+      <p>The tool landscape, roughly by maturity and what each will actually <em>do</em>:</p>
+
+      <ul>
+        <li><strong>Anomaly detection (most mature).</strong> <a href="https://docs.aws.amazon.com/devops-guru/latest/userguide/working-with-rds.html" target="_blank" rel="noopener">AWS DevOps Guru for RDS</a> learns your DB-load baseline from Performance Insights and flags deviations with probable causes — but note it points you at the problem query and tells you to "investigate execution plan / consider indexes"; it does <strong>not</strong> emit the <code>CREATE INDEX</code> for you.</li>
+        <li><strong>Index advice (specific).</strong> <a href="https://pganalyze.com/docs/index-advisor" target="_blank" rel="noopener">pganalyze's Index Advisor</a> goes further: it emits the exact <code>CREATE INDEX</code> statement <em>and</em> an estimated impact (its docs show cases like a query dropping from ~150 ms to &lt;1 ms), continuously, as your workload shifts.</li>
+        <li><strong>Assisted analysis.</strong> RDS Performance Insights + <strong>Amazon Q</strong>, and MCP-fed LLMs like Postgres MCP Pro, for plan-reading and triage.</li>
+        <li><strong>Fully-autonomous tuning</strong> is still a demo, not a production practice. Keep the human on DDL.</li>
+      </ul>
+
+      <h2>The playbook</h2>
+
+      <p>When a slow query lands on me now, the loop is:</p>
+
+      <ol>
+        <li><strong>Ground it</strong> — capture <code>EXPLAIN (ANALYZE, BUFFERS)</code>, the <code>pg_stat_statements</code> row, version, and non-default settings.</li>
+        <li><strong>Triage</strong> — let AI rank and summarize; you pick what to chase.</li>
+        <li><strong>Hypothesize</strong> — ask for plan explanation + index/rewrite candidates.</li>
+        <li><strong>Validate</strong> — <code>hypopg</code> for indexes, a replica for heavier changes; confirm the planner agrees.</li>
+        <li><strong>Apply</strong> — human-run, <code>CONCURRENTLY</code> for indexes, off-peak for anything that locks.</li>
+        <li><strong>Measure</strong> — before/after on latency or DB load; keep what wins.</li>
+      </ol>
+
+      <p>AI took the slowest, most error-prone parts of that loop — reading dense plans and remembering every diagnostic view — and made them fast. It did <em>not</em> take the judgment, and it shouldn't. The DBAs getting value from this aren't the ones who handed the keys to a chatbot; they're the ones who turned it into a very fast, very well-read junior who always shows their work — and who still gets every suggestion checked before it touches production.</p>
+
+      <div class="callout">
+        <p>Try one step this week: take a genuinely slow query, feed its <code>EXPLAIN (ANALYZE, BUFFERS)</code> to a model <em>with</em> the table stats, and see how close it gets. Validate before you apply. That single habit — grounded prompts, validated changes — is the whole difference between AI that helps and AI that pages you at 2 a.m.</p>
+      </div>
+
+      <h2>Sources &amp; further reading</h2>
+
+      <ul>
+        <li>BIRD benchmark (text-to-SQL on real databases): <a href="https://bird-bench.github.io/" target="_blank" rel="noopener">https://bird-bench.github.io/</a> — GPT-4 54.89% / 34.88% execution accuracy vs 92.96% for humans.</li>
+        <li>pgvector &amp; index trade-offs: <a href="https://github.com/pgvector/pgvector" target="_blank" rel="noopener">pgvector</a> &middot; <a href="https://markaicode.com/benchmarks/postgresql-pgvector-benchmark/" target="_blank" rel="noopener">HNSW vs IVFFlat benchmark</a> &middot; <a href="https://bigdataboutique.com/blog/hnsw-vs-ivfflat-how-to-choose-the-right-vector-index" target="_blank" rel="noopener">BigDataBoutique guide</a>.</li>
+        <li>Postgres MCP Pro (index tuning, hypopg simulation, health checks, read-only mode): <a href="https://github.com/crystaldba/postgres-mcp" target="_blank" rel="noopener">https://github.com/crystaldba/postgres-mcp</a>.</li>
+        <li>pganalyze Index Advisor: <a href="https://pganalyze.com/docs/index-advisor" target="_blank" rel="noopener">https://pganalyze.com/docs/index-advisor</a>.</li>
+        <li>AWS DevOps Guru for RDS: <a href="https://docs.aws.amazon.com/devops-guru/latest/userguide/working-with-rds.html" target="_blank" rel="noopener">https://docs.aws.amazon.com/devops-guru/latest/userguide/working-with-rds.html</a>.</li>
+        <li>hypopg (hypothetical indexes): <a href="https://github.com/HypoPG/hypopg" target="_blank" rel="noopener">https://github.com/HypoPG/hypopg</a>.</li>
+        <li>Postgres docs — <code>EXPLAIN</code>: <a href="https://www.postgresql.org/docs/current/using-explain.html" target="_blank" rel="noopener">https://www.postgresql.org/docs/current/using-explain.html</a> &middot; autovacuum: <a href="https://www.postgresql.org/docs/current/routine-vacuuming.html" target="_blank" rel="noopener">https://www.postgresql.org/docs/current/routine-vacuuming.html</a> &middot; <code>work_mem</code> (allocated per operation, per connection): <a href="https://www.postgresql.org/docs/current/runtime-config-resource.html" target="_blank" rel="noopener">https://www.postgresql.org/docs/current/runtime-config-resource.html</a> &middot; <code>CREATE INDEX CONCURRENTLY</code>: <a href="https://www.postgresql.org/docs/current/sql-createindex.html" target="_blank" rel="noopener">https://www.postgresql.org/docs/current/sql-createindex.html</a> &middot; version features (parallel query PG 9.6+, JIT PG 11+, B-tree deduplication PG 13+): <a href="https://www.postgresql.org/about/featurematrix/" target="_blank" rel="noopener">https://www.postgresql.org/about/featurematrix/</a>.</li>
+      </ul>
+
+      <p><em>The example latencies (4,200 ms → 38 ms, dead-tuple and connection scenarios) are illustrative of patterns I see repeatedly, not a single benchmarked run; the mechanisms, tools, benchmark figures, and SQL are real and cited above. Next up: grounding LLMs on live Postgres stats with MCP — follow along.</em></p>
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+
+</body>
+</html>
