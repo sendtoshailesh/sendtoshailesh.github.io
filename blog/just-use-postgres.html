@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>When Not to Use Postgres: A Decision Framework for the Four Walls | Shailesh Mishra</title>
+<meta name="description" content="One ACID engine now absorbs vectors, time-series, queues, search, and documents. Here is the consolidation case for defaulting to Postgres — and the four specific walls where I still reach for a specialist.">
+<meta name="author" content="Shailesh Mishra">
+<meta name="keywords" content="postgresql, databases, architecture, consolidation, polyglot persistence, when not to use postgres">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/just-use-postgres.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/just-use-postgres.html">
+<meta property="og:title" content="When Not to Use Postgres: A Decision Framework for the Four Walls">
+<meta property="og:description" content="One ACID engine now absorbs vectors, time-series, queues, search, and documents. Here is the consolidation case for defaulting to Postgres — and the four specific walls where I still reach for a specialist.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/db1-four-breakpoints-panel.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="When Not to Use Postgres: A Decision Framework for the Four Walls">
+<meta name="twitter:description" content="One ACID engine now absorbs vectors, time-series, queues, search, and documents. The consolidation case for defaulting to Postgres — and the four walls where I still reach for a specialist.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/db1-four-breakpoints-panel.png">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>When Not to Use Postgres: A Decision Framework for the Four Walls Where One Engine Isn't Enough</h1>
+      <div class="meta">Shailesh Mishra &middot; June 26, 2026 &middot; 12 min read</div>
+      <div class="tags">
+        <span class="post-tag">postgresql</span>
+        <span class="post-tag">databases</span>
+        <span class="post-tag">architecture</span>
+        <span class="post-tag">consolidation</span>
+        <span class="post-tag">case-study</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+
+      <p>Across years of working with customers, I've lost count of how many teams I've helped untangle the
+      same knot. One sticks with me: a team running five moving parts to serve one product — Postgres for
+      the relational core, a standalone Redis for the hot path, Elasticsearch for search, a separate
+      message queue for background jobs, and a cron service to fire the scheduled work. Five datastores.
+      Five backup stories. Five things to monitor, patch, secure, and get paged about at 2 a.m.</p>
+      <p>We collapsed all of it into one Postgres.</p>
+      <p>Elasticsearch split into Postgres full-text search (<code>tsvector</code>) for lexical queries and
+      <a href="https://github.com/pgvector/pgvector">pgvector</a> for semantic search. The message queue moved into
+      a Postgres-native queue. The cron service became <code>pg_cron</code>. Redis's hot path folded back into the
+      database it was caching in the first place. Five systems became one. Four managed-service bills
+      disappeared, the datastore line on the cloud invoice fell with them, and — quietly — the
+      architecture diagram stopped being something you needed a meeting to explain.</p>
+      <p>That pattern — repeated across enough customers that I now expect it — is what made me a believer.
+      It also taught me exactly where the belief stops.</p>
+      <h2>"Just use Postgres" stopped being a meme</h2>
+      <p>For years, "just use Postgres" was a half-joke developers told each other to push back on
+      résumé-driven database sprawl. It is not a joke anymore. It is the measured default.</p>
+      <p>In the <a href="https://survey.stackoverflow.co/2024/technology">Stack Overflow 2024 Developer Survey</a>,
+      PostgreSQL is the most-used database for the second year running at <strong>48.7%</strong> — ahead of MySQL
+      (40.3%), SQLite (33.1%), SQL Server (25.3%), and MongoDB (24.8%). That share climbed from <strong>33% in
+      2018 to 48.7% in 2024</strong>. It is also the <strong>most-admired</strong> database at 47.1% and the <strong>most-desired</strong>
+      at 74.5% — the database people use <em>and</em> the one they want to use next. The
+      <a href="https://db-engines.com/en/ranking_trend/system/PostgreSQL">DB-Engines popularity trend</a> tells the
+      same story over a longer window: a steady multi-year climb while most conventional relational
+      engines flatten out.</p>
+      <p>And this is not nostalgia carrying an old engine. Postgres keeps absorbing serious systems work.
+      <a href="https://www.postgresql.org/about/news/postgresql-18-released-3142/">PostgreSQL 18</a> (September 2025)
+      shipped an asynchronous I/O subsystem that delivers <strong>up to 3× read throughput</strong>, plus B-tree skip
+      scan, virtual generated columns, native <code>uuidv7()</code>, and OAuth 2.0 authentication. PostgreSQL 19 is
+      already in beta. The engine is getting <em>better</em> at precisely the workloads that used to push you off
+      it.</p>
+      <h2>The consolidation case: five systems, one engine</h2>
+      <p>Here is the thesis in one line: most teams reaching for a second, third, or fourth datastore are
+      solving a problem Postgres can already handle — and they are buying an operational tax to do it.</p>
+      <p><img alt="Five labeled workload boxes — vectors, queues, time-series, search, documents — converging into a single Postgres engine, each tagged with the extension that absorbs it: pgvector, pgmq, TimescaleDB, full-text, JSONB." src="visuals/db1-five-to-one-consolidation-hero.svg" /></p>
+      <p><em>Five workloads, one engine — each specialist replaced by a Postgres extension.</em></p>
+      <p>Walk the five workloads people most often spin up a separate system for, and look at the Postgres
+      answer and the operational consequence of <em>not</em> adding that system.</p>
+      <p><strong>Vectors → pgvector.</strong> The moment you build anything with embeddings, the reflex is to stand up a
+      dedicated vector database and a sync pipeline to keep it aligned with your source-of-truth tables.
+      <a href="https://github.com/pgvector/pgvector">pgvector</a> puts similarity search <em>next to</em> your relational
+      data: HNSW and IVFFlat indexes, exact and approximate nearest-neighbor, and — the part that matters
+      — full ACID transactions, JOINs, and point-in-time recovery. Your embeddings are backed up,
+      access-controlled, and consistent with the rows they describe, with no second system to keep in sync.</p>
+      <p><strong>Time-series → TimescaleDB.</strong> Metrics, events, and IoT readings are the classic "you need a
+      purpose-built time-series database" case. <a href="https://github.com/timescale/timescaledb">TimescaleDB</a>
+      turns a Postgres table into a hypertable with automatic time partitioning, a columnstore that
+      routinely hits <strong>90%+ compression</strong>, and continuous aggregates that maintain rollups incrementally.
+      You get time-series ergonomics without a second database to operate.</p>
+      <p><strong>Queues → pgmq.</strong> Background jobs usually mean a broker — SQS, RabbitMQ, or Redis with a queueing
+      layer bolted on. <a href="https://github.com/pgmq/pgmq">pgmq</a> gives you an SQS-style queue inside Postgres
+      with <strong>exactly-once delivery within a visibility timeout</strong>, no background worker and no external
+      dependency — and it is already run in production by teams like Supabase and Tembo. The decisive
+      detail: your job and the data it touches commit in the <em>same transaction</em>. No more "the row saved
+      but the job never fired" class of bug.</p>
+      <p><strong>Search → full-text (<code>tsvector</code> + GIN).</strong> Real lexical search — ranking, stemming, phrase queries —
+      runs natively through <a href="https://www.postgresql.org/docs/current/textsearch.html">Postgres full-text search</a>
+      with GIN indexes, no search cluster to provision. Pair it with pgvector and you get hybrid search:
+      lexical and semantic results fused with Reciprocal Rank Fusion, the pattern people reach for a
+      dedicated search platform to get.</p>
+      <p><strong>Documents → JSONB.</strong> "We need a document database" almost always means "we need flexible,
+      queryable, indexed JSON." <a href="https://www.postgresql.org/docs/current/datatype-json.html">Postgres <code>jsonb</code></a>
+      is a binary document type with GIN indexing and a rich operator set — schemaless where you want it,
+      relational where you need it, in one engine.</p>
+      <p><img alt="Five duplicated operational stacks — backup, HA/failover, security model, on-call, skills to hire — collapsing from five copies down to one of each." src="visuals/db1-one-engine-one-story-ops.png" /></p>
+      <p><em>The consolidation dividend: one backup, one failover, one security model, one on-call rotation.</em></p>
+      <p>Now the part that actually matters to whoever owns the budget and the pager. Five systems → one is
+      not a tidiness win. It is <strong>one backup to test, one failover to rehearse, one security model to
+      audit, one on-call rotation, and one set of skills to hire for.</strong> Every datastore you <em>don't</em> add is
+      a category of incident you will never have, a sync pipeline you will never debug, and a vendor
+      invoice you will never receive. That is the consolidation dividend, and after watching it pay off
+      across team after team, it is why I tell customers to default to Postgres.</p>
+      <p><strong>"But isn't one Postgres just one big blast radius?"</strong> It is the first objection a good
+      architect raises, and the honest answer cuts the other way. Five systems are five failure domains — five
+      patch cadences, five security surfaces, five things that can page you at 2 a.m. Collapsing them shrinks the
+      <em>aggregate</em> surface where an incident can start; it does not enlarge it. And one <em>engine</em> is not
+      one <em>node</em>: a consolidated Postgres still runs a primary with streaming (or synchronous, for a low RPO)
+      replicas, automated failover, and isolation by schema and role — and you stand up a second instance the day a
+      workload genuinely earns one. The real cost is honest: consolidation concentrates the upgrade-and-maintenance
+      event. So you spend the dividend on doing high availability properly and rehearsing failover — the difference
+      being you now rehearse it <strong>once</strong>, not five times.</p>
+      <h2>Where the belief stops: the four breakpoints</h2>
+      <p>Believer, not zealot. There are four walls where I reach for a specialist on purpose — not because
+      Postgres "failed," but because the workload genuinely lives outside what one ACID engine on one
+      primary node can do. If you cannot name which of these four you are hitting, you do not have one
+      yet.</p>
+      <p><img alt="Four red-walled cards, each showing one ceiling number and the specialist it justifies: 7.5M inserts/sec at 4 ms P99 (ScyllaDB), all of YouTube for 5+ years (Vitess), single-digit-ms at 500k+ req/s and 99.999% (DynamoDB), ~1 billion rows/sec (ClickHouse)." src="visuals/db1-four-breakpoints-panel.png" /></p>
+      <p><em>The four walls — each named with the number that justifies a specialist.</em></p>
+      <p><strong>1. Extreme write throughput → Cassandra / ScyllaDB.</strong> A single Postgres primary funnels all writes
+      through one node. When sustained ingest is the whole game, that is the wall.
+      <a href="https://www.scylladb.com/product/benchmarks/">ScyllaDB's published benchmark</a> claims a sustained
+      <strong>7.5 million inserts/sec at 4 ms P99</strong> and <strong>2×–5× the throughput of Apache Cassandra</strong> (ScyllaDB's
+      own figures, against Aerospike). Every major cloud has a managed equivalent — ScyllaDB Cloud,
+      Amazon Keyspaces, Google Cloud Bigtable, or
+      <a href="https://learn.microsoft.com/en-us/azure/managed-instance-apache-cassandra/introduction">Azure Managed Instance for Apache Cassandra</a>
+      — so this is a platform choice, not a winner.</p>
+      <p><strong>2. Planet-scale horizontal sharding → Spanner / CockroachDB / Vitess.</strong> Postgres has no
+      transparent native sharding; you bolt it on. <a href="https://vitess.io/docs/overview/whatisvitess/">Vitess</a>
+      exists precisely because MySQL and Postgres lack it — and it served <strong>all of YouTube's database
+      traffic for more than five years</strong>, and runs at Slack, Square, and JD.com. Spanner and CockroachDB
+      are built shard-native with global consistency from the ground up. Managed paths exist on every
+      cloud — <a href="https://cloud.google.com/spanner">Google Cloud Spanner</a>, CockroachDB Cloud, PlanetScale
+      (managed Vitess), or, if you want to <em>stay</em> Postgres, the Citus-powered
+      <a href="https://learn.microsoft.com/en-us/azure/postgresql/elastic-clusters/concepts-elastic-clusters">Azure Database for PostgreSQL Elastic Clusters</a>.</p>
+      <p><strong>3. Sub-millisecond key-value → Redis / DynamoDB.</strong> When you need a single-digit-millisecond floor
+      under heavy concurrency, connection and transaction overhead make Postgres the wrong tool.
+      <a href="https://aws.amazon.com/dynamodb/">DynamoDB</a> advertises single-digit-millisecond performance at any
+      scale, 500,000+ requests/sec, 200 TB+ tables, and 99.999% availability (AWS's stated figures); Redis
+      serves from memory in the microsecond-to-low-millisecond band. Managed equivalents exist on every
+      cloud — Amazon DynamoDB or ElastiCache, Google Cloud Memorystore, Redis Cloud, or
+      <a href="https://learn.microsoft.com/en-us/azure/redis/overview">Azure Managed Redis</a>
+      (the successor to Azure Cache for Redis).</p>
+      <p><strong>4. True OLAP at petabyte scale → ClickHouse / Snowflake.</strong> Postgres is a row-oriented OLTP engine.
+      It can run analytics, but it cannot match a column store's scan rate.
+      <a href="https://clickhouse.com/docs/en/intro">ClickHouse</a> documents a query processing <strong>100 million rows
+      in 92 ms — roughly a billion rows/sec at about 7 GB/sec</strong> — and routinely scans billions to
+      trillions of rows. Managed column stores sit on every platform — <a href="https://clickhouse.com/cloud">ClickHouse Cloud</a>,
+      Snowflake, <a href="https://cloud.google.com/bigquery">Google BigQuery</a>, Amazon Redshift, or
+      <a href="https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview">Azure Data Explorer / Microsoft Fabric</a>.
+      Tellingly, even one vendor's own OLTP docs point you <em>away</em> from the transactional engine and toward
+      a column store for petabyte analytics — the breakpoint is real across vendors.</p>
+      <p>These are legitimate, correct choices for their case. Knowing exactly where the wall is — with a
+      number attached — is what makes "just use Postgres" a real engineering position instead of a slogan.</p>
+      <h2>The decision rule</h2>
+      <p><img alt="Decision strip: default to Postgres, then ask whether you are hitting one of the four walls with a number attached — if yes, specialize and name the wall; if no, just use Postgres." src="visuals/db1-decision-rule-strip.svg" /></p>
+      <p><em>The whole decision in one rule: name the wall with a number, or default to Postgres.</em></p>
+      <p>Default to Postgres. Reach for a specialist only when you can name which of the four walls you are
+      hitting and put a number on it: the write rate, the shard count, the latency floor, the scan size.
+      If you cannot name the wall with a number, you have not hit one — you have an itch to add a system.
+      And every system you do not add is a backup, a failover, and an on-call rotation you do not run.</p>
+      <h2>A framework for deciding: default-to-Postgres, justify the exit</h2>
+      <p>You do not need to run benchmarks to make this call — you need a decision rule your team applies
+      every time someone proposes a new datastore. Here is the one I give the leaders I work with.</p>
+      <p><strong>Step 1 — Make Postgres the default of record.</strong> Write it down: new workloads land on Postgres
+      unless a named wall is proven. This flips the burden of proof. The question stops being "can Postgres
+      do this?" and becomes "have we shown it <em>can't</em>?" That single policy kills most résumé-driven sprawl
+      before it reaches your invoice.</p>
+      <p><strong>Step 2 — Demand a number, not a vibe.</strong> Any proposal to add a specialist must name which wall it
+      clears and the threshold that forces it:</p>
+      <table>
+      <thead>
+      <tr>
+      <th>Wall</th>
+      <th>Specialist class</th>
+      <th>The number that justifies leaving Postgres</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+      <td>Write throughput</td>
+      <td>Cassandra / ScyllaDB</td>
+      <td>Sustained ingest near <strong>millions of inserts/sec</strong>, single primary saturated</td>
+      </tr>
+      <tr>
+      <td>Horizontal sharding</td>
+      <td>Spanner / Vitess / Citus</td>
+      <td>Data + write volume past one node, <strong>transparent sharding</strong> is the product</td>
+      </tr>
+      <tr>
+      <td>Sub-ms key-value</td>
+      <td>Redis / DynamoDB</td>
+      <td>Hard <strong>single-digit-ms</strong> floor at <strong>100k+ req/s</strong> sustained</td>
+      </tr>
+      <tr>
+      <td>OLAP scan</td>
+      <td>ClickHouse / Snowflake</td>
+      <td><strong>Billion-row</strong> scans, column-store rates a row engine cannot match</td>
+      </tr>
+      </tbody>
+      </table>
+      <p>If no one can fill in the right-hand column with a measured figure, the wall is hypothetical and the
+      default holds.</p>
+      <p><strong>Step 3 — Price the operational tax.</strong> Every datastore you add is <em>one more</em> backup to test,
+      failover to rehearse, security model to audit, on-call rotation to staff, and skill to hire for.
+      Make that cost explicit in the decision: a specialist must beat Postgres by enough to pay for its own
+      ops overhead, not just win on a benchmark slide.</p>
+      <p><strong>Step 4 — Prove it cheaply before you buy.</strong> Before greenlighting a new system, have the team spend
+      a week consolidating one workload back into Postgres (vectors via pgvector, queues via pgmq,
+      time-series via TimescaleDB) and measure the result. It is a small, low-risk spike that almost always
+      shifts the conversation — and it is far cheaper than a migration you regret.</p>
+      <h2>Your move before the sixth datastore appears</h2>
+      <p>Run a one-line audit on your current architecture: for every datastore beyond Postgres, can your team
+      name the wall it clears and the number behind it? The ones that can't are consolidation candidates —
+      fewer backups, fewer failovers, fewer invoices, a diagram you no longer need a meeting to explain.</p>
+      <p>Adopt the rule and the burden of proof inverts in your favor: <strong>default to Postgres, and make every
+      exit justify itself with a number.</strong> Tell me the consolidation call you made — and which wall, if
+      any, actually forced your hand.</p>
+      <h2>References</h2>
+      <table>
+      <thead>
+      <tr>
+      <th>#</th>
+      <th>Claim</th>
+      <th>Source</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+      <td>1</td>
+      <td>Postgres most-used DB 48.7% (2nd yr); 33%→48.7% since 2018; 47.1% admired; 74.5% desired</td>
+      <td><a href="https://survey.stackoverflow.co/2024/technology">Stack Overflow 2024 Developer Survey</a></td>
+      </tr>
+      <tr>
+      <td>2</td>
+      <td>Postgres popularity trending up over a multi-year window</td>
+      <td><a href="https://db-engines.com/en/ranking_trend/system/PostgreSQL">DB-Engines trend</a></td>
+      </tr>
+      <tr>
+      <td>3</td>
+      <td>PG18 async I/O up to 3× read throughput; skip scan; UUIDv7; OAuth 2.0</td>
+      <td><a href="https://www.postgresql.org/about/news/postgresql-18-released-3142/">PostgreSQL 18 release</a></td>
+      </tr>
+      <tr>
+      <td>4</td>
+      <td>pgvector — HNSW/IVFFlat ANN, ACID, JOINs, PITR</td>
+      <td><a href="https://github.com/pgvector/pgvector">github.com/pgvector/pgvector</a></td>
+      </tr>
+      <tr>
+      <td>5</td>
+      <td>TimescaleDB — hypertables, 90%+ columnstore compression, continuous aggregates</td>
+      <td><a href="https://github.com/timescale/timescaledb">github.com/timescale/timescaledb</a></td>
+      </tr>
+      <tr>
+      <td>6</td>
+      <td>pgmq — exactly-once within visibility timeout; used by Supabase/Tembo</td>
+      <td><a href="https://github.com/pgmq/pgmq">github.com/pgmq/pgmq</a></td>
+      </tr>
+      <tr>
+      <td>7</td>
+      <td>Postgres full-text search (<code>tsvector</code> + GIN)</td>
+      <td><a href="https://www.postgresql.org/docs/current/textsearch.html">PostgreSQL FTS docs</a></td>
+      </tr>
+      <tr>
+      <td>8</td>
+      <td>Postgres <code>jsonb</code> document type + GIN indexing</td>
+      <td><a href="https://www.postgresql.org/docs/current/datatype-json.html">PostgreSQL JSON docs</a></td>
+      </tr>
+      <tr>
+      <td>9</td>
+      <td>pg_cron — in-database job scheduling</td>
+      <td><a href="https://github.com/citusdata/pg_cron">github.com/citusdata/pg_cron</a></td>
+      </tr>
+      <tr>
+      <td>10</td>
+      <td>ScyllaDB 7.5M inserts/s @ 4 ms P99; 2–5× Cassandra (vendor figures)</td>
+      <td><a href="https://www.scylladb.com/product/benchmarks/">ScyllaDB benchmarks</a></td>
+      </tr>
+      <tr>
+      <td>11</td>
+      <td>Vitess ran all of YouTube's DB traffic 5+ yrs; Slack/Square/JD.com</td>
+      <td><a href="https://vitess.io/docs/overview/whatisvitess/">vitess.io</a></td>
+      </tr>
+      <tr>
+      <td>12</td>
+      <td>DynamoDB single-digit ms, 500k+ req/s, 200 TB+, 99.999% (AWS figures)</td>
+      <td><a href="https://aws.amazon.com/dynamodb/">aws.amazon.com/dynamodb</a></td>
+      </tr>
+      <tr>
+      <td>13</td>
+      <td>ClickHouse ~1B rows/s (100M rows in 92 ms), ~7 GB/s</td>
+      <td><a href="https://clickhouse.com/docs/en/intro">clickhouse.com/docs</a></td>
+      </tr>
+      <tr>
+      <td>14</td>
+      <td>Azure Managed Instance for Apache Cassandra — Wall 1 managed option (one cloud among equals)</td>
+      <td><a href="https://learn.microsoft.com/en-us/azure/managed-instance-apache-cassandra/introduction">Microsoft Learn</a></td>
+      </tr>
+      <tr>
+      <td>15</td>
+      <td>Google Cloud Spanner — Wall 2 shard-native distributed SQL, global consistency</td>
+      <td><a href="https://cloud.google.com/spanner">cloud.google.com/spanner</a></td>
+      </tr>
+      <tr>
+      <td>16</td>
+      <td>Azure Database for PostgreSQL Elastic Clusters (Citus sharding) — Wall 2 stay-Postgres path</td>
+      <td><a href="https://learn.microsoft.com/en-us/azure/postgresql/elastic-clusters/concepts-elastic-clusters">Microsoft Learn</a></td>
+      </tr>
+      <tr>
+      <td>17</td>
+      <td>Azure Managed Redis (successor to Azure Cache for Redis) — Wall 3 managed option</td>
+      <td><a href="https://learn.microsoft.com/en-us/azure/redis/overview">Microsoft Learn</a></td>
+      </tr>
+      <tr>
+      <td>18</td>
+      <td>ClickHouse Cloud — Wall 4 managed column store</td>
+      <td><a href="https://clickhouse.com/cloud">clickhouse.com/cloud</a></td>
+      </tr>
+      <tr>
+      <td>19</td>
+      <td>Google BigQuery — Wall 4 serverless data warehouse</td>
+      <td><a href="https://cloud.google.com/bigquery">cloud.google.com/bigquery</a></td>
+      </tr>
+      <tr>
+      <td>20</td>
+      <td>Azure Data Explorer (Kusto) / Microsoft Fabric — Wall 4 petabyte OLAP</td>
+      <td><a href="https://learn.microsoft.com/en-us/azure/data-explorer/data-explorer-overview">Microsoft Learn</a></td>
+      </tr>
+      </tbody>
+      </table>
+      <blockquote>
+      <p>Figures marked vendor/self-reported (Stack Overflow survey %, GitHub stars, ScyllaDB and DynamoDB
+      benchmarks, ClickHouse throughput, and version numbers) are time-sensitive and were
+      re-verified against primary sources on 2026-06-28. Re-check before redistributing.</p>
+      </blockquote>
+
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+
+</body>
+</html>

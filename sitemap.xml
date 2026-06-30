@@ -14,9 +14,21 @@
   </url>
   <url>
     <loc>https://sendtoshailesh.github.io/blog/</loc>
-    <lastmod>2026-04-26</lastmod>
+    <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sendtoshailesh.github.io/blog/just-use-postgres.html</loc>
+    <lastmod>2026-06-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://sendtoshailesh.github.io/blog/loop-engineering-ai-native-development.html</loc>
+    <lastmod>2026-06-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://sendtoshailesh.github.io/blog/postgresql-explain-buffers-case-study.html</loc>
