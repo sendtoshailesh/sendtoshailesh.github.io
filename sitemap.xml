@@ -19,6 +19,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://sendtoshailesh.github.io/blog/postgres-mcp-server.html</loc>
+    <lastmod>2026-07-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://sendtoshailesh.github.io/blog/just-use-postgres.html</loc>
     <lastmod>2026-06-26</lastmod>
     <changefreq>monthly</changefreq>
