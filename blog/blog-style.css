@@ -172,6 +172,18 @@ a:hover { text-decoration: underline; }
 }
 .post-header .tags { margin-top: 0.75rem; }
 
+/* ── Post Hero (title banner) ─────────────────────────────────────── */
+.post-hero {
+  margin: 0 0 2.5rem;
+}
+.post-hero img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
 /* ── Post Content ────────────────────────────────────────────────── */
 .post-content h2 {
   font-size: 1.45rem;
