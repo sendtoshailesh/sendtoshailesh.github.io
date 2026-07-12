@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I Added RAG to My Support Chatbot and It Got Worse — Here's What Actually Fixed It | Shailesh Mishra</title>
+<meta name="description" content="A controlled three-system experiment isolating what drives reliability in LLM customer support: naive RAG regressed below the ungrounded baseline, and a tiny QLoRA intent router — 0.14% of the parameters, trained on a free Colab T4 — fixed it.">
+<meta name="author" content="Shailesh Mishra">
+<meta name="keywords" content="genai, rag, llm, fine-tuning, qlora, peft, intent routing, customer support, hybrid rag, retrieval augmented generation">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/hybrid-rag-fine-tuning.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/hybrid-rag-fine-tuning.html">
+<meta property="og:title" content="I Added RAG to My Support Chatbot and It Got Worse — Here's What Actually Fixed It">
+<meta property="og:description" content="A controlled three-system experiment isolating what drives reliability in LLM customer support: retrieval vs. parameter-efficient fine-tuning. Naive RAG regressed; a tiny QLoRA intent router fixed it.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/hybrid-rag-comparison.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="I Added RAG to My Support Chatbot and It Got Worse — Here's What Actually Fixed It">
+<meta name="twitter:description" content="A controlled three-system experiment isolating what drives reliability in LLM customer support: retrieval vs. parameter-efficient fine-tuning.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/hybrid-rag-comparison.png">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>I Added RAG to My Support Chatbot and It Got Worse &mdash; Here&rsquo;s What Actually Fixed It</h1>
+      <div class="meta">Shailesh Mishra &middot; July 12, 2026 &middot; 11 min read</div>
+      <div class="tags">
+        <span class="post-tag">genai</span>
+        <span class="post-tag">rag</span>
+        <span class="post-tag">fine-tuning</span>
+        <span class="post-tag">qlora</span>
+        <span class="post-tag">llm</span>
+      </div>
+    </div>
+
+    <figure class="post-hero">
+      <img src="visuals/hybrid-rag-comparison.png" alt="Comparative results across the baseline, naive RAG, and hybrid RAG systems on ROUGE, BLEU, and hallucination metrics.">
+    </figure>
+
+    <div class="post-content">
+
+<blockquote>
+<p><strong>TL;DR</strong> &mdash; I built a customer-support assistant three ways, holding the base model constant, and measured each. Naive retrieval-augmented generation (RAG) actually scored <em>below</em> the ungrounded baseline on answer quality. A tiny fine-tuned intent router &mdash; 0.14% of the model&rsquo;s parameters, trained on a free Colab T4 &mdash; fixed it and topped every quality metric. The lesson: <strong>retrieval and fine-tuning fix different problems, and &ldquo;just add RAG&rdquo; is not a strategy.</strong></p>
+</blockquote>
+
+<hr />
+
+<h2>At a glance</h2>
+
+<table>
+<thead>
+<tr><th>Metric</th><th>Baseline</th><th>Naive RAG</th><th>Hybrid RAG</th></tr>
+</thead>
+<tbody>
+<tr><td>ROUGE-1</td><td>0.137</td><td>0.122 &darr;</td><td><strong>0.148</strong></td></tr>
+<tr><td>BLEU</td><td>0.0044</td><td>0.0064</td><td><strong>0.0149</strong> (3.4&times;)</td></tr>
+<tr><td>Hallucination</td><td>36%</td><td>26%</td><td><strong>26%</strong></td></tr>
+<tr><td>Router format adherence</td><td>&mdash;</td><td>&mdash;</td><td><strong>100%</strong></td></tr>
+</tbody>
+</table>
+
+<p><em>Same base model (<code>Qwen2.5-1.5B-Instruct</code>) across all three systems &mdash; only the architecture around it changed.</em></p>
+
+<hr />
+
+<h2>The problem nobody demos</h2>
+
+<p>Customer-support LLMs fail in three expensive ways:</p>
+
+<ol>
+<li><strong>Hallucination</strong> &mdash; inventing policies that don&rsquo;t exist (a refund window, a shipping carrier, a fee).</li>
+<li><strong>Intent misread</strong> &mdash; confidently answering the wrong question.</li>
+<li><strong>Policy drift</strong> &mdash; replies that quietly ignore the company&rsquo;s actual standard operating procedures (SOPs).</li>
+</ol>
+
+<p>The usual fix you hear is &ldquo;ground it with RAG.&rdquo; Retrieve the relevant policy document, stuff it into the prompt, and the model will stop making things up. It sounds airtight. So I decided to actually measure it &mdash; not with vibes, but with a controlled experiment.</p>
+
+<h2>The experiment: change one thing at a time</h2>
+
+<p>The trap in most &ldquo;RAG vs. fine-tuning&rdquo; debates is that people change the model, the data, and the pipeline all at once, then attribute the result to whatever they were rooting for. To isolate cause and effect, I held the <strong>generation model constant</strong> &mdash; <a href="https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct">Qwen2.5-1.5B-Instruct</a> &mdash; across all three systems and changed only the architecture around it:</p>
+
+<table>
+<thead>
+<tr><th>System</th><th>What it is</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>A &mdash; Baseline</strong></td><td>Raw LLM. No company policies. Answers from parametric memory alone.</td></tr>
+<tr><td><strong>B &mdash; Naive RAG</strong></td><td>Semantic retrieval over corporate SOPs &rarr; context &rarr; same LLM.</td></tr>
+<tr><td><strong>C &mdash; Hybrid RAG</strong></td><td>A fine-tuned <em>intent router</em> classifies the query first, then retrieval targets the right policy, then the same LLM answers.</td></tr>
+</tbody>
+</table>
+
+<p>Everything else was locked for fairness and reproducibility:</p>
+
+<ul>
+<li><strong>Deterministic decoding</strong> (<code>do_sample=False</code>) so results are repeatable.</li>
+<li><strong>Leakage-free splits</strong> &mdash; stratified 80/10/10 with programmatic set-intersection checks between train/validation/test.</li>
+<li><strong>A six-metric scorecard</strong>: Format Adherence, Intent Accuracy, ROUGE-1/L, BLEU, Consistency, and Hallucination Frequency.</li>
+<li>The knowledge base was a set of real corporate policy documents (refunds, returns, billing, shipping, account recovery), chunked by Markdown header.</li>
+</ul>
+
+<h2>The surprise: retrieval made it worse</h2>
+
+<p>Here&rsquo;s the result I did not expect.</p>
+
+<p><strong>Naive RAG scored <em>below</em> the ungrounded baseline on answer quality</strong> &mdash; ROUGE-1 of <strong>0.122 vs. 0.137</strong>. Adding retrieval <em>hurt</em>.</p>
+
+<p>When I dug into the transcripts, the cause was clear and a little embarrassing for the &ldquo;just add RAG&rdquo; crowd. The retriever kept pulling the <strong>right document but the wrong section</strong>. Ask &ldquo;when do I get my refund?&rdquo; and it would surface the agent-workflow steps rather than the refund-timing rule. The model, dutifully grounded in that passage, would answer:</p>
+
+<table>
+<thead>
+<tr><th></th><th>Answer it produced</th></tr>
+</thead>
+<tbody>
+<tr><td>&#10060; <strong>Naive RAG</strong></td><td><em>&ldquo;Please share your order ID.&rdquo;</em></td></tr>
+<tr><td>&#9989; <strong>What the SOP actually says</strong></td><td><em>&ldquo;Refunds are processed in 3&ndash;7 business days.&rdquo;</em></td></tr>
+</tbody>
+</table>
+
+<p>The correct rule was sitting one section away in the same file.</p>
+
+<p>Retrieval alone had made the bot <strong>safe and useless</strong>. It stopped hallucinating numbers, but it also stopped answering the question. Grounding is only as good as <em>what</em> you ground on.</p>
+
+<h2>The fix: a tiny fine-tuned intent router</h2>
+
+<p>The failure wasn&rsquo;t retrieval itself &mdash; it was <em>unguided</em> retrieval. So instead of letting a raw, messy query drive the vector search, I put a small classifier in front of it whose only job is to decide <strong>what the user actually wants</strong> and emit a strict JSON intent that the retriever can target.</p>
+
+<p>I trained that router with <strong>QLoRA</strong>.</p>
+
+<h3>What LoRA / QLoRA actually is</h3>
+
+<p><strong><a href="https://arxiv.org/abs/2106.09685">LoRA (Low-Rank Adaptation)</a></strong> is a parameter-efficient fine-tuning technique. Instead of updating all of a model&rsquo;s billions of weights, you freeze them and inject small trainable &ldquo;adapter&rdquo; matrices into a few layers. A weight update &Delta;W is approximated by the product of two much smaller matrices:</p>
+
+<p style="text-align:center"><em>W&prime; = W + &Delta;W = W + B&middot;A</em></p>
+
+<p>where W is frozen and A, B have a small rank r (I used r = 16). You end up training a tiny fraction of the parameters. <strong><a href="https://arxiv.org/abs/2305.14314">QLoRA</a></strong> adds 4-bit quantization of the frozen base model, so the whole thing fits on a modest GPU.</p>
+
+<p>In this project the numbers were striking:</p>
+
+<ul>
+<li><strong>2.18M of 1.55B parameters trained &mdash; just 0.14%.</strong></li>
+<li>Adapters applied only to the attention projections (<code>q_proj</code>, <code>v_proj</code>).</li>
+<li>4-bit NF4 base, <code>r=16</code>, <code>alpha=32</code>, on a <strong>free Colab T4</strong>.</li>
+<li>Training converged cleanly (train loss 2.29 &rarr; 0.41; no overfitting).</li>
+</ul>
+
+<p><img src="visuals/hybrid-rag-training-curves.png" alt="QLoRA intent-router training curves — loss falling from 2.29 to 0.41 with no overfitting." /></p>
+
+<p>Because the base weights stay frozen, the model keeps its general language ability and only specializes at the one thing I need: query &rarr; intent JSON.</p>
+
+<h2>How Hybrid RAG works</h2>
+
+<p>The pipeline is &ldquo;route first, then retrieve&rdquo;:</p>
+
+<pre><code>Raw query  →  Intent router (QLoRA → JSON)  →  Targeted retrieval  →  Grounded answer
+"when's my       {"intent":                     right SOP + right       generated by the
+ money back?"     "get_refund"}                  section                 same base LLM
+</code></pre>
+
+<p>The router removes the guesswork <em>before</em> retrieval, so the vector search lands on the correct passage instead of the plausible-but-wrong one that sank Naive RAG.</p>
+
+<p><img src="visuals/hybrid-rag-architecture.png" alt="Hybrid RAG architecture: raw query flows through a QLoRA intent router to targeted retrieval and a grounded answer from the base LLM." /></p>
+
+<h2>The results</h2>
+
+<p>Evaluated on a held-out set of 50 stratified queries:</p>
+
+<table>
+<thead>
+<tr><th>System</th><th>ROUGE-1</th><th>ROUGE-L</th><th>BLEU</th><th>Hallucination</th></tr>
+</thead>
+<tbody>
+<tr><td>Baseline</td><td>0.137</td><td>0.088</td><td>0.0044</td><td>36%</td></tr>
+<tr><td>Naive RAG</td><td>0.122</td><td>0.085</td><td>0.0064</td><td>26%</td></tr>
+<tr><td><strong>Hybrid RAG</strong></td><td><strong>0.148</strong></td><td><strong>0.109</strong></td><td><strong>0.0149</strong></td><td><strong>26%</strong></td></tr>
+</tbody>
+</table>
+
+<p>Plus, the router itself hit <strong>100% valid JSON</strong> (format adherence) and <strong>88% intent accuracy</strong>. On the flagship refund category, Hybrid RAG&rsquo;s ROUGE-1 climbed to <strong>0.222</strong>.</p>
+
+<p><img src="visuals/hybrid-rag-comparison.png" alt="Comparative results across all three systems on ROUGE-1, ROUGE-L, BLEU, and hallucination frequency." /></p>
+
+<p>Read across the row for Hybrid RAG and it wins on <strong>every</strong> generation quality metric &mdash; BLEU is <strong>3.4&times; the baseline</strong> and 2.3&times; Naive RAG.</p>
+
+<h2>The one insight worth keeping</h2>
+
+<p>Decompose the numbers and a clean story falls out:</p>
+
+<ul>
+<li><strong>Retrieval reduced hallucination</strong> &mdash; 36% &rarr; 26%. Grounding is what stops the model inventing facts.</li>
+<li><strong>Fine-tuning drove quality</strong> &mdash; the router is what lifted ROUGE, BLEU, and actual helpfulness, by making sure retrieval grounded on the <em>right</em> thing.</li>
+</ul>
+
+<p>They fix <strong>different problems</strong>. Retrieval is about <em>not being wrong</em>. Fine-tuning (here, routing) is about <em>knowing what to be right about</em>. Naive RAG gave you the first without the second &mdash; which is exactly why it went safe and evasive. You usually need both.</p>
+
+<h2>Being honest about limits</h2>
+
+<p>This is a deliberately scoped study, and it would be dishonest to oversell it:</p>
+
+<ul>
+<li>Small held-out set (50 queries) and a single support domain.</li>
+<li>Reference-based metrics (ROUGE/BLEU) are proxies, not ground truth for &ldquo;helpfulness.&rdquo;</li>
+<li>Hallucination is measured as unsupported numbers relative to retrieved context &mdash; a useful proxy, not a full factuality audit.</li>
+<li>A 1.5B model on a T4 is a constraint, not a recommendation for production scale.</li>
+</ul>
+
+<p>None of that changes the <em>direction</em> of the finding, which is the point of a controlled comparison: the only variable that moved was the architecture.</p>
+
+<h2>Takeaways for anyone building LLM support</h2>
+
+<ol>
+<li><strong>Measure before you believe.</strong> RAG can regress quality if retrieval targets the wrong passage. Ship an eval harness before you ship the bot.</li>
+<li><strong>Route, then retrieve.</strong> A cheap intent classifier in front of your vector store can matter more than a bigger model behind it.</li>
+<li><strong>PEFT is genuinely accessible.</strong> Fine-tuning 0.14% of a model on a free GPU is well within reach &mdash; you don&rsquo;t need a cluster to get a useful specialist.</li>
+<li><strong>&ldquo;Just add RAG&rdquo; is not a strategy.</strong> Retrieval and fine-tuning are complementary, not interchangeable.</li>
+</ol>
+
+<hr />
+
+<h2>References &amp; tooling</h2>
+
+<p><strong>Methods:</strong></p>
+
+<ul>
+<li><strong>LoRA</strong> &mdash; Hu et al., <em>Low-Rank Adaptation of Large Language Models</em> (2021) &mdash; <a href="https://arxiv.org/abs/2106.09685">arxiv.org/abs/2106.09685</a></li>
+<li><strong>QLoRA</strong> &mdash; Dettmers et al., <em>Efficient Finetuning of Quantized LLMs</em> (2023) &mdash; <a href="https://arxiv.org/abs/2305.14314">arxiv.org/abs/2305.14314</a></li>
+<li><strong>ROUGE</strong> &mdash; Lin, <em>ROUGE: A Package for Automatic Evaluation of Summaries</em> (2004) &mdash; <a href="https://aclanthology.org/W04-1013/">aclanthology.org/W04-1013</a></li>
+<li><strong>BLEU</strong> &mdash; Papineni et al., <em>BLEU: a Method for Automatic Evaluation of Machine Translation</em> (2002) &mdash; <a href="https://aclanthology.org/P02-1040/">aclanthology.org/P02-1040</a></li>
+</ul>
+
+<p><strong>Tooling:</strong></p>
+
+<ul>
+<li><strong>Base model</strong> &mdash; Qwen2.5-1.5B-Instruct &mdash; <a href="https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct">huggingface.co/Qwen/Qwen2.5-1.5B-Instruct</a></li>
+<li><strong>PEFT</strong> (LoRA/QLoRA implementation) &mdash; <a href="https://github.com/huggingface/peft">github.com/huggingface/peft</a></li>
+<li><strong>bitsandbytes</strong> (4-bit NF4 quantization) &mdash; <a href="https://github.com/bitsandbytes-foundation/bitsandbytes">github.com/bitsandbytes-foundation/bitsandbytes</a></li>
+<li><strong>Embeddings</strong> &mdash; Sentence-Transformers <code>all-MiniLM-L6-v2</code> &mdash; <a href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2">huggingface.co/sentence-transformers/all-MiniLM-L6-v2</a></li>
+<li><strong>Vector store</strong> &mdash; Chroma &mdash; <a href="https://docs.trychroma.com/">docs.trychroma.com</a></li>
+</ul>
+
+<hr />
+
+<p><em>Built end-to-end on Google Colab (T4) with Qwen2.5-1.5B-Instruct, all-MiniLM-L6-v2 embeddings, ChromaDB, and QLoRA &mdash; as part of the IIITB GenAI capstone on controlled customer-support generation.</em></p>
+
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+</body>
+</html>
