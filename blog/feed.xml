@@ -12,8 +12,155 @@
   <language>en-us</language>
   <managingEditor>sendtoshailesh@gmail.com (Shailesh Mishra)</managingEditor>
   <webMaster>sendtoshailesh@gmail.com (Shailesh Mishra)</webMaster>
-  <lastBuildDate>Sun, 12 Jul 2026 15:36:34 +0000</lastBuildDate>
+  <lastBuildDate>Wed, 15 Jul 2026 10:42:49 +0000</lastBuildDate>
   <generator>generate_feed.py</generator>
+  <item>
+    <title>Top AI Agent Evaluation Frameworks to Know in 2026 - Pick by the Layer You Need to Test, Not by Star Count</title>
+    <link>https://sendtoshailesh.github.io/blog/ai-agent-evaluation-frameworks-2026.html</link>
+    <guid isPermaLink="true">https://sendtoshailesh.github.io/blog/ai-agent-evaluation-frameworks-2026.html</guid>
+    <pubDate>Wed, 15 Jul 2026 00:00:00 +0000</pubDate>
+    <dc:creator>Shailesh Mishra</dc:creator>
+    <description>Compare the top AI agent evaluation frameworks in 2026 by the layer you need to test - trajectory, CI, observability, benchmarks - not by GitHub stars.</description>
+    <category>ai-agents</category>
+    <category>agent-evaluation</category>
+    <category>llm-as-judge</category>
+    <category>observability</category>
+    <category>benchmarks</category>
+    <enclosure url="https://sendtoshailesh.github.io/blog/visuals/generated/ai-agent-evaluation-frameworks-2026-hero.jpg" type="image/png" length="0" />
+    <media:content url="https://sendtoshailesh.github.io/blog/visuals/generated/ai-agent-evaluation-frameworks-2026-hero.jpg" medium="image" />
+    <content:encoded><![CDATA[<p>The agent shipped. Demo was clean. Two weeks later a customer flagged that it kept &ldquo;getting the right answer the slow way&rdquo; — and when I pulled the trace, there it was: to answer one billing question, the agent called the search tool three times with slightly wrong parameters, ignored the first two results, and stumbled into the correct number on the third try. The final string was perfect. The trajectory was broken. And every test we had — all of them graded that final string — was green.</p>
+<p>That gap is the whole reason this post exists. In 2026 we are shipping tool-calling, multi-step agents far faster than we can measure them, and the tooling market has responded with a wall of frameworks: DeepEval at 16.8k stars, Langfuse at 31k, Phoenix at 10.5k, Ragas at 14.8k, OpenAI Evals at 18.9k (all as of 2026-07-13). Faced with that, most teams do the natural thing — sort by stars and pick the top result. That is the wrong sort key.</p>
+<p>Here is the argument in one line: <strong>you don&rsquo;t pick an agent-eval framework by GitHub stars — you pick by the evaluation layer you need to test.</strong> Evaluate the <em>trajectory</em>, not just the final answer, and do it continuously across the lifecycle. This piece gives you a five-bucket taxonomy to make that call in minutes, a walkthrough of one representative tool per bucket with real numbers, and a lifecycle loop so your agent doesn&rsquo;t glitch in production later.</p>
+<p>I&rsquo;m writing this from what I&rsquo;ve seen shipping agents with teams, not from a vendor slide. Every framework below gets the same treatment and the same skepticism.</p>
+<h2>Why agent evaluation is a different problem now</h2>
+<p>A single-turn LLM call can be graded on its final string. You send a prompt, you get text, you check the text. An <strong>agent</strong> is not that. An agent reasons over multiple turns, calls tools, reads the tool results, and uses them to decide what to do next. That one difference — tool use inside a loop — breaks output-only testing.</p>
+<p>Consider what &ldquo;the answer is right&rdquo; actually hides. Two runs of the same agent can produce an identical final answer while taking completely different paths: one picks the correct tool on the first try; the other selects the wrong tool, passes a malformed parameter, retries, and lands on the answer by luck. Output-only eval scores both as PASS. Then you swap the model or tweak the system prompt, the lucky path stops being lucky, and the &ldquo;silent regression&rdquo; you never tested for shows up as a production incident.</p>
+<p><img alt="Two agent runs reach the same final answer, but one follows a broken tool-call trajectory that output-only tests still score as PASS." src="https://sendtoshailesh.github.io/blog/visuals/v02-outcome-vs-trajectory.png" /></p>
+<p>Microsoft Foundry states the requirement about as plainly as it can be stated: <em>&ldquo;you need to evaluate not just the final output, but also the quality and efficiency of each step in the workflow&rdquo;</em> (<a href="https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-evaluators/agent-evaluators">Foundry agent evaluators</a>). That is the shift. The failures that matter in agents live at the step and tool level:</p>
+<ul>
+<li><strong>Tool misuse</strong> — the agent calls a tool it shouldn&rsquo;t, or skips one it should.</li>
+<li><strong>Wrong parameters</strong> — right tool, malformed input, wrong result.</li>
+<li><strong>Redundant steps</strong> — three tool calls where one would do, inflating latency and cost.</li>
+<li><strong>Silent regressions</strong> — a prompt or model change quietly degrades the path while the final answer stays plausible.</li>
+</ul>
+<p>None of those show up if you only diff the last message. So the frameworks worth knowing in 2026 differ mainly by <strong>which layer they let you measure</strong> — and that is exactly the axis you should be shopping on.</p>
+<h2>The mental model: five variant types</h2>
+<p>Instead of a ranked list of tools, hold this taxonomy in your head. There are five variant types of agent-eval framework, and each one is built to test a different layer.</p>
+<p><img alt="Taxonomy of five agent-evaluation framework types, each keyed to the evaluation layer it tests: trajectory/process, open-source library, observability platform, capability benchmark, and provider-native." src="https://sendtoshailesh.github.io/blog/visuals/v01-five-variant-taxonomy.png" /></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Variant type</th>
+<th>What it measures</th>
+<th>When you reach for it</th>
+<th>Representative tools</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Trajectory / process evaluators</strong></td>
+<td>Step-by-step: tool selection, tool-call accuracy, task adherence, path efficiency</td>
+<td>You need to know <em>why</em> an agent failed, not just that it did</td>
+<td>Microsoft Foundry agent evaluators; DeepEval agentic metrics</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Open-source eval libraries</strong></td>
+<td>Metric functions (LLM-as-judge + statistical) wired into unit tests / CI</td>
+<td>You want assertions that fail a PR when quality drops</td>
+<td>DeepEval, Ragas</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Observability + eval platforms</strong></td>
+<td>Live traces + evals + datasets over real production traffic</td>
+<td>You need to debug and monitor an agent already serving users</td>
+<td>Langfuse, Arize Phoenix</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Capability benchmarks</strong></td>
+<td>Standardized tasks + leaderboards comparing model/agent capability</td>
+<td>You&rsquo;re choosing a base model or reporting comparative capability</td>
+<td>τ-bench / τ³-bench</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Provider-native / cloud eval</strong></td>
+<td>Managed evaluators inside a cloud/model platform, CI gates + monitoring</td>
+<td>You&rsquo;re already on that platform and want batteries-included eval</td>
+<td>Microsoft Foundry; OpenAI Evals <em>(caveated — see §5)</em></td>
+</tr>
+</tbody>
+</table>
+<p>Two honest notes about the table, because the overlaps are the point rather than a bug. DeepEval appears in two rows: it <em>is</em> a metric library and it <em>does</em> trajectory metrics. Foundry spans trajectory and provider-native. The taxonomy sorts by a tool&rsquo;s <strong>primary job</strong>, and the thesis — pick by the layer you need — is precisely what lets you live with a tool that spans two rows. You&rsquo;re not asking &ldquo;which bucket does this tool belong to,&rdquo; you&rsquo;re asking &ldquo;which layer do I need to test right now,&rdquo; then reaching for whatever covers it.</p>
+<p>The rest of this post walks one representative per layer, with concrete facts, so the buckets stop being abstract.</p>
+<h2>A walkthrough, one representative per layer</h2>
+<h3>Trajectory / process — Microsoft Foundry agent evaluators</h3>
+<p><img alt="An agent trajectory (Reason to Select tool to Call tool to Read result to Next step to Final answer) with a loop-back arc, where Foundry process evaluators apply a per-step pass check to each tool step while system evaluators score the entire path once for the end-to-end outcome." src="https://sendtoshailesh.github.io/blog/visuals/v06-agent-lifecycle-checks.png" /></p>
+<p>If your question is <em>why did the agent fail</em>, you want process evaluators. Foundry&rsquo;s agent evaluators are grouped into three categories (<a href="https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-evaluators/agent-evaluators">agent evaluators</a>, updated 2026-06-02): <strong>system evaluation</strong> (end-to-end outcome — Task Completion, Task Adherence, Intent Resolution, Task Navigation Efficiency, a 1–5 Customer Satisfaction score); <strong>process evaluation</strong> (per-step tool use — Tool Call Accuracy, Tool Selection, Tool Input Accuracy, Tool Output Utilization, Tool Call Success); and a preview <strong>quality</strong> grader.</p>
+<p>The design detail I like: these &ldquo;act like unit tests for agentic systems,&rdquo; taking agent messages and returning a binary Pass/Fail (some via a 1–5 score thresholded to pass/fail). And <strong>Task Navigation Efficiency</strong> compares the agent&rsquo;s actual tool trajectory to a ground-truth sequence — <code>exact_match</code>, <code>in_order_match</code>, or <code>any_order_match</code> — returning precision, recall, and F1. That is a <em>deterministic</em> trajectory check, not an LLM opinion, which matters for the judge-reliability debate below. It&rsquo;s LLM-as-judge where it needs to be (it recommends <code>gpt-5-mini</code> as the judge model), deterministic where it can be.</p>
+<h3>Open-source library — DeepEval</h3>
+<p><img alt="A developer seen from behind codes at a workstation ringed by many glowing monitors in royal blue, teal, and purple — evoking hands-on CI and continuous testing." src="https://sendtoshailesh.github.io/blog/visuals/generated/ai-agent-evaluation-frameworks-2026-deepeval-scene.jpg" /></p>
+<p>If your question is <em>will this fail my PR when quality drops</em>, you want an eval library wired into CI. DeepEval bills itself as &ldquo;Pytest for LLM apps&rdquo; — <code>deepeval test run</code> fails the suite on a threshold breach and drops into any CI/CD (<a href="https://github.com/confident-ai/deepeval">confident-ai/deepeval</a>, v4.1.0, Apache-2.0, 16.8k stars as of 2026-07-13). Its metric families span <strong>G-Eval</strong> (research-backed LLM-as-judge on custom criteria), <strong>DAG</strong> (a deterministic, graph-based judge), plus dedicated <strong>agentic</strong>, <strong>RAG</strong>, <strong>multi-turn</strong>, <strong>MCP</strong>, and <strong>multimodal</strong> metrics, with end-to-end and component-level tracing via <code>@observe</code>. It runs metrics against any LLM or local models and integrates with OpenAI Agents, LangChain, LangGraph, CrewAI, LlamaIndex, Google ADK and more. The paid Confident AI platform is optional on top — the library itself runs anywhere.</p>
+<h3>Open-source library — Ragas (with an honesty flag)</h3>
+<p><img alt="A luminous central AI agent node-graph retrieves from surrounding document cards and knowledge-base panels and synthesizes a single flowing answer stream — a retrieval-augmented-generation scene." src="https://sendtoshailesh.github.io/blog/visuals/generated/ai-agent-evaluation-frameworks-2026-ragas-rag-scene.jpg" /></p>
+<p>Ragas belongs in the same bucket but earns a caveat that actually helps you choose. It&rsquo;s an objective-metrics library (LLM-based and traditional) built for <strong>RAG</strong> apps, and its standout feature is <strong>production-aligned test-set generation</strong> — genuinely useful when you &ldquo;don&rsquo;t have a test dataset ready&rdquo; (<a href="https://github.com/explodinggradients/ragas">explodinggradients/ragas</a>, now <code>vibrantlabsai/ragas</code>, v0.4.3, Apache-2.0, 14.8k stars as of 2026-07-13). But look at the CLI templates: <code>rag_eval</code> ships today, while <code>agent_evals</code>, <code>benchmark_llm</code>, <code>prompt_evals</code>, and <code>workflow_eval</code> are marked <strong>&ldquo;Coming Soon.&rdquo;</strong> Ragas is battle-tested for RAG and <em>emerging</em> for agents. If you&rsquo;re doing RAG, it&rsquo;s excellent. If you need trajectory eval today, reaching for a RAG-mature library because it&rsquo;s popular is exactly the star-driven mistake this post is warning against.</p>
+<h3>Observability + eval platform — Langfuse and Phoenix</h3>
+<p>If your agent is already serving users and your question is <em>what actually happened in production</em>, you want an observability platform — tracing plus evals plus datasets over real traffic. Two strong open-source options, and the difference between them is instructive.</p>
+<p><strong>Langfuse</strong> is an &ldquo;open-source LLM engineering platform&rdquo; — tracing (<code>@observe</code>, OpenTelemetry), versioned prompt management, evaluations (LLM-as-judge, <strong>code evaluators</strong>, user feedback, manual labeling, custom pipelines), datasets, and a playground. It self-hosts in minutes via Docker Compose, Kubernetes/Helm, or Terraform for AWS/Azure/GCP, or runs as Langfuse Cloud (<a href="https://github.com/langfuse/langfuse">langfuse/langfuse</a>, v3.212.0, 31k stars as of 2026-07-13, <strong>MIT</strong> except the <code>ee/</code> directory; part of ClickHouse since Jan 2026).</p>
+<p><strong>Arize Phoenix</strong> is an &ldquo;open-source AI observability platform for experimentation, evaluation, and troubleshooting&rdquo; — tracing via OpenTelemetry/<strong>OpenInference</strong>, response and retrieval evals, versioned datasets, experiments, a playground, and prompt management. It&rsquo;s explicitly vendor/language/framework agnostic and runs local, in a notebook, in a container, or in the cloud (<a href="https://github.com/Arize-ai/phoenix">Arize-ai/phoenix</a>, v17.28.0, 10.5k stars as of 2026-07-13, <strong>Elastic License 2.0</strong>).</p>
+<p>The buying signal here isn&rsquo;t star count — it&rsquo;s the <strong>license and hosting</strong> fine print. Langfuse is MIT (with a carved-out enterprise directory); Phoenix is Elastic License 2.0. If portability and license terms drive your infra decisions, that difference matters more than any feature-list bullet.</p>
+<h3>Capability benchmark — τ-bench / τ³-bench</h3>
+<p>If your question is <em>which base model should I even start with</em>, you want a benchmark — standardized tasks and a leaderboard. τ-bench emulates dynamic user↔agent conversations with domain API tools and policy guidelines, and its key idea is reporting <strong>pass^k</strong>: success across <em>k</em> repeated trials, which exposes reliability instead of single-run luck (<a href="https://github.com/sierra-research/tau-bench">sierra-research/tau-bench</a>, arXiv 2406.12045; superseded by <a href="https://github.com/sierra-research/tau2-bench">τ³-bench</a>, arXiv 2506.07982, which adds banking and a voice modality).</p>
+<p>The numbers make the reliability point vividly. On τ-bench retail (tool-calling), claude-3-5-sonnet-20241022 scores <strong>0.692 / 0.576 / 0.509 / 0.462</strong> across pass^1 through pass^4; gpt-4o drops from 0.604 to 0.383 (as of 2026-07-13). The single-shot number looks fine; consistency erodes fast when you run the same task four times.</p>
+<p><img alt="pass^k reliability decay on tau-bench retail: claude-3-5-sonnet falls from 0.692 to 0.462 and gpt-4o from 0.604 to 0.383 across pass^1 through pass^4." src="https://sendtoshailesh.github.io/blog/visuals/v05-passk-reliability.png" /></p>
+<p>Two caveats to keep you honest: the τ-bench repo now warns its tasks are outdated, so cite τ³-bench for current figures — and, critically, a high leaderboard score tells you a model is <em>capable</em>, not that <em>your</em> agent works on <em>your</em> tools with <em>your</em> data. Benchmarks pick a base model. They do not decide whether you ship.</p>
+<h3>Provider-native — Foundry, and the OpenAI Evals contrast</h3>
+<p>If you&rsquo;re already on a cloud or model platform, the batteries-included option is provider-native eval. Foundry (covered above) is the full-agent example. <strong>OpenAI Evals</strong> is the one I want to caveat carefully, because it&rsquo;s popular enough (18.9k stars, MIT, as of 2026-07-13) that people assume it&rsquo;s an agent evaluator. It isn&rsquo;t, quite.</p>
+<p>OpenAI Evals is &ldquo;a framework for evaluating LLMs and LLM systems, and an open-source registry of benchmarks&rdquo; (<a href="https://github.com/openai/evals">openai/evals</a>). You write custom evals with JSON data plus YAML params — no eval code needed for basic or model-graded evals — and its Completion Function Protocol <em>can</em> target a tool-using agent. But it grades the <strong>final output</strong>, not tool-call accuracy, tool selection, or trajectory efficiency, and it&rsquo;s been less actively developed lately. So treat it as a <strong>caveated contrast</strong>, not a peer trajectory evaluator. It still earns a mention for three narrow reasons: it&rsquo;s the provider-native choice if you&rsquo;re already in the OpenAI ecosystem (runnable right in the OpenAI Dashboard); it gives the provider-native bucket a second, non-Microsoft example; and it&rsquo;s the honest &ldquo;general LLM-eval retrofitted for agents&rdquo; case. If you want OpenAI-native <em>trajectory</em> eval, the stronger path is the OpenAI Agents SDK&rsquo;s tracing and evals, not the Evals registry.</p>
+<h2>How to eval so it doesn&rsquo;t glitch in production</h2>
+<p>Picking the right layer is half the job. The other half is <em>when</em> you run evals — and the answer is &ldquo;continuously, on both sides of the ship line.&rdquo; Think of it as a loop: shift-left before production, monitor-right after.</p>
+<p><img alt="Agent-evaluation lifecycle loop: shift-left pre-production checks and monitor-right post-production evaluation arranged around the ship line, with a feedback loop back to the golden dataset." src="https://sendtoshailesh.github.io/blog/visuals/v03-lifecycle-loop.png" /></p>
+<p><strong>Pre-production (shift left).</strong> Before an agent goes near a user:</p>
+<ol>
+<li><strong>Build a golden dataset.</strong> Real or synthetic representative tasks with expected outcomes <em>and</em> expected tool trajectories. If you don&rsquo;t have one, this is exactly where Ragas-style test-set generation earns its keep.</li>
+<li><strong>Grade outcome <em>and</em> trajectory.</strong> Run system-level pass/fail <em>and</em> per-step tool checks. This is the whole thesis operationalized — never grade only the final string.</li>
+<li><strong>Gate CI.</strong> Wire the suite so a threshold breach fails the PR (DeepEval&rsquo;s <code>deepeval test run</code> is built for this). A regression that can&rsquo;t merge can&rsquo;t ship.</li>
+<li><strong>Add deterministic checks beside the judge.</strong> Where you have ground truth, use it — Foundry&rsquo;s Task Navigation Efficiency (precision/recall/F1) or DeepEval&rsquo;s DAG — so you aren&rsquo;t fully dependent on an LLM&rsquo;s opinion.</li>
+<li><strong>Run pass^k.</strong> Execute key tasks <em>k</em> times and watch for reliability decay, the way τ-bench does. A task that passes once and fails twice is not shippable.</li>
+<li><strong>Red-team before release.</strong> Adversarially probe for jailbreaks and unsafe tool use — Foundry ships an AI red-teaming agent built on Microsoft PyRIT for exactly this.</li>
+</ol>
+<p><strong>Post-production (monitor right).</strong> Once it&rsquo;s live:</p>
+<ol start="7">
+<li><strong>Trace everything.</strong> Capture every step and tool call — OpenTelemetry/OpenInference is the common standard across Foundry, Langfuse, and Phoenix, so you&rsquo;re not locked in.</li>
+<li><strong>Run online eval.</strong> Score a sample of live traffic continuously, not just your offline dataset.</li>
+<li><strong>Alert on drift.</strong> A model update, a prompt tweak, or a changed tool API can silently degrade the trajectory. Catch it with monitoring, not a customer email.</li>
+</ol>
+<p>The payoff is direct: shift-left catches regressions before they cost you an incident; monitor-right catches the drift that offline tests can never anticipate. Skip either half and the &ldquo;works in demo, breaks in prod&rdquo; cycle continues. The one-line rule: <strong>evaluate the trajectory, in CI and in production.</strong></p>
+<h2>Three debates worth settling for yourself</h2>
+<p><strong>Leaderboard score vs. your own data.</strong> τ-bench gives you comparable capability numbers, and they&rsquo;re genuinely useful for base-model selection. But a high leaderboard score says nothing about your agent on your tools — which is why Foundry, DeepEval, and Ragas all push &ldquo;bring your own data.&rdquo; Use benchmarks to pick a model; use your-data evals to decide whether to ship.</p>
+<p><strong>LLM-as-judge vs. deterministic checks.</strong> Nearly every framework here leans on an LLM judge (Foundry&rsquo;s Quality Grader, DeepEval&rsquo;s G-Eval, Langfuse, Phoenix, Ragas). It&rsquo;s scalable, but it adds a second model&rsquo;s bias and variance to your measurements. The counter isn&rsquo;t to abandon judges — it&rsquo;s to pair them with deterministic checks where ground truth exists: DeepEval&rsquo;s DAG, Foundry&rsquo;s precision/recall/F1 trajectory match. Trust, but verify.</p>
+<p><strong>Open-source library vs. managed platform.</strong> DeepEval and Ragas (Apache-2.0, run anywhere) trade convenience for control and portability. Foundry and OpenAI (managed, batteries-included) trade portability for support and integration. Langfuse and Phoenix are open-source <em>platforms</em> that split the difference — self-host or cloud — but on different licenses (MIT vs. Elastic License 2.0). There&rsquo;s no universally right answer; there&rsquo;s the answer that fits your portability, license, and ops constraints.</p>
+<h2>The decision rule</h2>
+<p>Here&rsquo;s the whole post compressed into a single question tree. Start with what you&rsquo;re deciding, and the layer picks itself.</p>
+<p><img alt="Decision tree mapping what you are deciding (base model, PR regressions, why a step failed, live debugging, platform-native) to the evaluation layer and a representative framework." src="https://sendtoshailesh.github.io/blog/visuals/v04-decision-rule-flow.png" /></p>
+<ul>
+<li><strong>Choosing a base model?</strong> → capability benchmark → τ³-bench.</li>
+<li><strong>Catching PR regressions before merge?</strong> → open-source eval library → DeepEval or Ragas.</li>
+<li><strong>Need to know <em>why</em> a step failed?</strong> → trajectory/process evaluator → Foundry agent evaluators (or DeepEval agentic metrics).</li>
+<li><strong>Debugging or monitoring live traffic?</strong> → observability + eval platform → Langfuse or Phoenix.</li>
+<li><strong>Already standardized on a cloud/model platform?</strong> → provider-native eval → Foundry (or OpenAI Evals, with the trajectory caveat).</li>
+</ul>
+<p>Notice what dropped out of that list: star counts. Not once did &ldquo;which has the most GitHub stars&rdquo; help you answer the question. The layer did all the work.</p>
+<h2>What to do this week</h2>
+<p>Pick <strong>one</strong> agent you already have running and instrument it through both <strong>outcome and trajectory</strong> eval — not someday, this week. Start where your pain actually lives: if silent regressions keep slipping through, stand up an offline CI gate first (grab a library from bucket 2 and fail a PR on a threshold breach). If it&rsquo;s production breakages that hurt, start with tracing and online eval from an observability platform (bucket 3). Choose one tool from that one bucket and run it end to end.</p>
+<p>You&rsquo;ll learn more from instrumenting a single real agent through one layer than from another afternoon comparing star counts. The frameworks in this post are all good at <em>something</em> — the skill worth building in 2026 isn&rsquo;t picking the &ldquo;best&rdquo; one, it&rsquo;s knowing which layer you&rsquo;re testing and reaching for the tool that measures it.</p>
+<hr />
+<p><em>Frameworks, versions, star counts, and leaderboard scores verified 2026-07-13 against their primary sources; all of these drift, so re-check before you rely on a specific number.</em></p>]]></content:encoded>
+  </item>
   <item>
     <title>I Added RAG to My Support Chatbot and It Got Worse — Here&#x27;s What Actually Fixed It</title>
     <link>https://sendtoshailesh.github.io/blog/hybrid-rag-fine-tuning.html</link>
