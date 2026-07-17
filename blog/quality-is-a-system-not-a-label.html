@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quality Is a System, Not a Label: How to Audit AI Training and Evaluation Data | Shailesh Mishra</title>
+<meta name="description" content="A constructively skeptical eight-control audit for human, synthetic, training, preference, and benchmark data">
+<meta name="author" content="Shailesh Mishra">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/quality-is-a-system-not-a-label.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/quality-is-a-system-not-a-label.html">
+<meta property="og:title" content="Quality Is a System, Not a Label: How to Audit AI Training and Evaluation Data">
+<meta property="og:description" content="A constructively skeptical eight-control audit for human, synthetic, training, preference, and benchmark data">
+<meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/quality-is-a-system-not-a-label-hero.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="Quality Is a System, Not a Label: How to Audit AI Training and Evaluation Data">
+<meta name="twitter:description" content="A constructively skeptical eight-control audit for human, synthetic, training, preference, and benchmark data">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/quality-is-a-system-not-a-label-hero.png">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>Quality Is a System, Not a Label: How to Audit AI Training and Evaluation Data</h1>
+      <div class="meta">Shailesh Mishra &middot; July 16, 2026 &middot; 18 min read</div>
+      <div class="tags">
+        <span class="post-tag">software</span>
+        <span class="post-tag">ai</span>
+        <span class="post-tag">technology</span>
+        <span class="post-tag">engineering</span>
+      </div>
+    </div>
+
+    <figure class="post-hero">
+      <img src="visuals/quality-is-a-system-not-a-label-hero.png" alt="Quality Is a System, Not a Label: How to Audit AI Training and Evaluation Data">
+    </figure>
+
+    <div class="post-content">
+
+<p>In one coding-agent benchmark, making the test set better made the reported result
+look much worse.</p>
+<p>The <a href="https://arxiv.org/abs/2410.06992">SWE-bench+ audit</a> examined 251
+test-passing SWE-Agent with GPT-4 patches on SWE-bench Full. Among those patches,
+32.67 percent showed solution leakage and 31.08 percent passed because the tests
+were too weak. The paper agrees that the original 12.47 percent resolution rate
+fell sharply after filtering, but not on the endpoint: its abstract reports 3.97
+percent while Section 2.2 reports 5.49 percent.</p>
+<p>The agent had not suddenly regressed. The measurement had become more honest.</p>
+<blockquote>
+<p>Quality is a system, not a label.</p>
+</blockquote>
+<p>This article proposes eight controls for auditing that system: construct, source,
+coverage, evaluator fit, representation, disagreement, validation, and governance.
+You can apply them to 50 items, record one blocking threshold, and make the first
+failed or unknown control actionable.</p>
+<p>That result is a useful warning for anyone buying, building, or approving AI data.
+&ldquo;High quality&rdquo; often arrives as a label backed by an attractive proxy: human-made,
+expert-reviewed, representative, high-agreement, heavily filtered, or synthetic at
+scale. Every one of those properties can be useful. None proves that the data is
+fit for the decision you plan to make with it.</p>
+<p>I started digging into this after watching Enzo Blindow, CEO of Prolific, argue in
+<a href="https://www.youtube.com/watch?v=HraR3bRlbyg">AI Can&rsquo;t Replace Human Judgment</a>
+that the AI industry is moving from a volume problem to a quality problem. The
+episode gets an important point right: human judgment can change model behavior in
+ways that raw scale cannot. But two stronger claims, that volume is solved and
+synthetic data has a ceiling, do not survive as universal rules.</p>
+<p>The evidence points to a more practical operating rule. Within this audit, each
+control needs evidence, a metric, a failure threshold, an owner, a remediation
+path, and a <code>pass</code>, <code>fail</code>, or <code>unknown</code> status. If one critical control fails, a
+reassuring average should not let the data through.</p>
+<h2>A quality claim is a decision in disguise</h2>
+<p>&ldquo;This is a high-quality dataset&rdquo; is incomplete. High quality for what decision?</p>
+<p>A preference dataset used to tune a customer-support model has a different job
+from a red-team set used to find medical-safety failures. A benchmark used to
+compare coding agents has a different job from a training corpus used to teach
+Python syntax. The same example can be useful for one decision and invalid for
+another.</p>
+<p>The category labels do not close that gap:</p>
+<ul>
+<li>Human-labeled tells you who produced a judgment, not whether the task measured
+  the intended behavior</li>
+<li>Expert-reviewed tells you about credentials, not whether those credentials fit
+  the judgment being requested</li>
+<li>Representative tells you about a sampling target, not whether aggregation erased
+  stable minority preferences</li>
+<li>High agreement tells you that a cohort answered similarly, not whether they
+  shared the same blind spot</li>
+<li>Synthetic tells you how an example was generated, not whether it is correct,
+  diverse, independent, or useful</li>
+</ul>
+<p>A stronger claim has six parts:</p>
+<blockquote>
+<p>Dataset v3 is fit for release-gate R7 for English support conversations from the
+US and India, based on the eight-control audit dated 2026-07-16, with two known
+coverage gaps, one blocking threshold, and one accountable owner.</p>
+</blockquote>
+<p>That sentence is less marketable. It is also testable.</p>
+<h2>The eight-control audit</h2>
+<p><img alt="Eight data-quality controls surround a decision; fail or unknown blocks the release gate and returns to an owner for remediation." src="visuals/v01-eight-control-system.png" /></p>
+<p>The controls are not stages to complete once. They interact. Changing a prompt can
+change the construct. Adding a country can change representation and disagreement.
+Using a model to generate more examples can change provenance and coverage.
+Updating a benchmark test can change every historical comparison.</p>
+<h3>1. Construct: define the behavior before the label</h3>
+<p>The construct is the thing you intend to measure or improve. &ldquo;Helpfulness&rdquo; is not
+a construct until a team specifies observable behavior, context, and exclusions.
+Does helpful mean correct, complete, concise, empathetic, policy-compliant, or
+successful at resolving the user&rsquo;s task? Those objectives can conflict.</p>
+<p>Clear instructions are necessary, but clarity alone does not establish validity.
+The <a href="https://arxiv.org/abs/2009.01325">human-feedback summarization study</a> is
+instructive because it did not assume ROUGE was the target. The researchers
+collected direct human comparisons and optimized for preferences on the studied
+summarization tasks. Their preference-trained models outperformed reference
+summaries and larger supervised models under that evaluation. The result is
+bounded, but it illustrates a reusable audit question: validate the proxy against
+the behavior you actually care about.</p>
+<p>Audit questions:</p>
+<ul>
+<li>What observable decision will this label change?</li>
+<li>Which plausible but wrong proxies could annotators optimize?</li>
+<li>Which examples separate the intended construct from those proxies?</li>
+<li>What independent outcome would falsify the construct definition?</li>
+</ul>
+<h3>2. Source: record where every example came from</h3>
+<p>Source control covers origin, transformations, model generation, human edits,
+deduplication, and links between training and evaluation data. &ldquo;Public web&rdquo; or
+&ldquo;human reviewed&rdquo; is not enough lineage to reproduce a decision.</p>
+<p>The risk is not limited to accidental duplication. <a href="https://arxiv.org/abs/2305.17493">The Curse of Recursion</a>
+shows a specific failure mode when models train recursively on generated data:
+the tails of the original distribution can progressively disappear. The paper
+does not prove that every generated example causes collapse. It shows why teams
+need to record generation depth and preserve independently observed data.</p>
+<p>SWE-bench+ exposes the evaluation version of the same problem. If a solution or
+its logic leaks into the task context, the benchmark no longer measures the
+intended capability. Provenance is part of the score.</p>
+<p>Audit questions:</p>
+<ul>
+<li>Can each item be traced to raw input, transformations, generators, and reviewers?</li>
+<li>How many generation or distillation steps separate it from observed data?</li>
+<li>What prevents train-test, solution, or evaluator leakage?</li>
+<li>Can the exact dataset version be reconstructed?</li>
+</ul>
+<h3>3. Coverage: measure what is missing</h3>
+<p>Filtering can improve the return on compute. It cannot manufacture coverage that
+was never present in the candidate pool.</p>
+<p><a href="https://arxiv.org/abs/2406.11794">DataComp-LM</a> evaluated data-selection recipes
+from a 240-trillion-token pool. Its best recipe reported a 6.6-point MMLU gain over
+a MAP-Neo baseline for a 7B model trained on 2.6T tokens while using 40 percent
+less compute. That is strong
+evidence that selection matters. It is not evidence that volume is solved. The
+recipe&rsquo;s opportunity came from an enormous pool.</p>
+<p>The tail remains expensive. A <a href="https://arxiv.org/abs/2404.04125">study of 34 multimodal models across five
+pretraining datasets</a> found that downstream
+performance followed a sample-inefficient log-linear trend and remained poor on
+long-tail concepts. Because the study is multimodal, I would not copy its exact
+curve into a text-only capacity plan. I would copy the audit question: which rare
+concepts, languages, tasks, and harms are missing from the data I can see?</p>
+<p>Audit questions:</p>
+<ul>
+<li>Which deployment slices are absent or too sparse to estimate failure?</li>
+<li>Does filtering improve average performance by removing difficult tail cases?</li>
+<li>Are rare but high-cost failures sampled by consequence rather than frequency?</li>
+<li>What changed between the candidate pool and the released set?</li>
+</ul>
+<h3>4. Evaluator fit: match the judge to the judgment</h3>
+<p>&ldquo;Expert&rdquo; is a relationship between a person and a task. It is not a permanent
+quality tier.</p>
+<p>A database engineer may be the right evaluator for SQL correctness. A person who
+uses a screen reader may be the right evaluator for an accessibility workflow. A
+clinician may detect a medical error, while a patient may better judge whether an
+explanation is understandable or dismissive. For preference tasks, lived
+experience can be relevant evidence rather than a weaker substitute for credentials.</p>
+<p>The <a href="https://arxiv.org/abs/2306.06826">POPQUORN dataset</a> collected 45,000
+annotations from 1,484 annotators and found meaningful effects from annotator
+background across question answering, offensiveness, rewriting, and politeness.
+That does not make demographics a complete model of expertise. It shows that the
+evaluator&rsquo;s background can affect the labels collected.</p>
+<p>Audit questions:</p>
+<ul>
+<li>Which knowledge or lived experience is required for this specific judgment?</li>
+<li>Which cohort should be excluded, and why?</li>
+<li>Do instructions ask evaluators to judge beyond their competence?</li>
+<li>Are evaluator errors measured separately from genuine preference differences?</li>
+</ul>
+<h3>5. Representation: compare the panel with deployment</h3>
+<p>Representation is not a generic diversity percentage. It is a comparison between
+the evaluator population and the people affected by the system.</p>
+<p><a href="https://arxiv.org/abs/2404.16019">PRISM</a> links 1,500 participants from 75
+countries to feedback from 8,011 live conversations with 21 language models. Its
+value is not only geographic breadth. The dataset preserves participant context
+alongside preferences, allowing researchers to ask who preferred which behavior.</p>
+<p>That still does not guarantee national representativeness, and demographic fields
+do not capture every relevant viewpoint. A team should report both the target
+population and the mismatch it could measure.</p>
+<p>Audit questions:</p>
+<ul>
+<li>What is the deployment population for this decision?</li>
+<li>Which groups are over-sampled, under-sampled, or absent?</li>
+<li>Are sample sizes large enough to report uncertainty per important subgroup?</li>
+<li>Which relevant experiences are not represented by available demographic fields?</li>
+</ul>
+<h3>6. Disagreement: classify it before aggregating it</h3>
+<p>Many pipelines treat disagreement as a defect to eliminate. Sometimes it is.
+Annotators can misunderstand instructions or make errors. But disagreement can
+also reveal ambiguity, plural preference, subgroup variation, or concept drift.</p>
+<p><a href="https://arxiv.org/abs/2303.17548">OpinionsQA</a> uses 1,498 questions based on Pew
+American Trends Panel surveys and compares language-model responses with human
+opinion distributions. The important word is distributions. A majority label
+would discard much of the signal the benchmark was designed to inspect.</p>
+<p>Before majority vote or adjudication, assign disagreement to one of four buckets:</p>
+<ol>
+<li>Likely evaluator error</li>
+<li>Ambiguous instruction or example</li>
+<li>Stable plural preference</li>
+<li>Time, region, or cohort drift</li>
+</ol>
+<p>Then choose an action. Retrain evaluators for the first. Rewrite the task for the
+second. Preserve a distribution or conditional policy for the third. Version the
+data and investigate the fourth.</p>
+<p>Audit questions:</p>
+<ul>
+<li>What does the label distribution look like before aggregation?</li>
+<li>Does disagreement cluster by example, evaluator, cohort, or time?</li>
+<li>Which aggregation rule matches the deployment decision?</li>
+<li>Which minority judgments represent high-cost failures that majority vote hides?</li>
+</ul>
+<h3>7. Validation: prove that labels predict an independent outcome</h3>
+<p>Validation is where a quality claim earns the right to influence a release. Gold
+items, attention checks, and agreement metrics test useful properties. They do not
+prove that the resulting labels improve model behavior.</p>
+<p>The <a href="https://arxiv.org/abs/2203.02155">InstructGPT study</a> provides a memorable
+bounded example. On its prompt distribution, human evaluators preferred outputs
+from a 1.3B-parameter aligned model over outputs from 175B GPT-3. The result shows
+that curated feedback can have substantial impact in post-training. It does not
+show that 1.3B parameters and a small feedback set replace broad pretraining.</p>
+<p>Synthetic-data interventions make the same point from another direction. In one
+<a href="https://arxiv.org/abs/2306.04140">diversified synthetic-data experiment</a>, an
+oracle label-replacement study found that correcting misaligned labels increased
+model accuracy by 14.4 percent in absolute terms, while filtering out-of-scope
+examples did not improve accuracy. &ldquo;Human in the loop&rdquo; is too vague. The
+intervention and downstream measure matter.</p>
+<p>Audit questions:</p>
+<ul>
+<li>Does the data improve an independent preference, capability, or safety measure?</li>
+<li>Is the validation set independent of the generator and primary evaluator cohort?</li>
+<li>What threshold blocks release, and was it defined before results were viewed?</li>
+<li>Which intervention changed the outcome, and which did not?</li>
+</ul>
+<h3>8. Governance: make the claim reproducible and challengeable</h3>
+<p>Governance turns a one-time study into an operating system. At minimum, record the
+data version, decision owner, rights and consent basis, change history, known gaps,
+failure thresholds, escalation path, and retirement trigger.</p>
+<p>Tools can make those controls inspectable. <a href="https://github.com/davidjurgens/potato">Potato</a>
+is a free, self-hosted annotation platform that supports training phases, gold
+items, agreement metrics, adjudication, behavioral tracking, agent-trace review,
+and continuous evaluation. Those features do not decide whether a study is valid.
+They make it possible to implement and audit the policy a team chooses.</p>
+<p>Governance depth should scale with consequence. A two-hour prompt experiment and
+a medical-safety release should not carry the same review burden. Both still need
+enough lineage to reproduce the result.</p>
+<p>Audit questions:</p>
+<ul>
+<li>Who can approve, challenge, and retire this data version?</li>
+<li>What rights cover collection, transformation, model training, and derivative data?</li>
+<li>Which changes force revalidation?</li>
+<li>Can a reviewer reproduce the release decision from stored evidence?</li>
+</ul>
+<h2>Three seductive shortcuts that fail</h2>
+<p><img alt="Three evidence balances replace quality versus scale, human versus synthetic, and agreement versus disagreement with bounded engineering rules." src="visuals/v02-claims-under-test.png" /></p>
+<h3>Shortcut 1: &ldquo;Quality replaces quantity&rdquo;</h3>
+<p>The evidence supports a narrower claim: curation changes the return on scale.
+DataComp-LM&rsquo;s 6.6-point MMLU gain and 40 percent compute reduction make selection
+impossible to dismiss. Its 240-trillion-token candidate pool makes scale impossible
+to dismiss too.</p>
+<p>The engineering rule is <code>CURATE + COVER</code>: publish the selection recipe and the
+remaining coverage gaps. A smaller final set is not automatically a better set if
+filtering removed rare, difficult, or costly cases.</p>
+<h3>Shortcut 2: &ldquo;Humans beat synthetic data&rdquo;</h3>
+<p>Humans can supply judgment that a generator cannot independently validate. But
+synthetic data can be useful inside a controlled pipeline.</p>
+<p><a href="https://arxiv.org/abs/2306.11644">Phi-1</a> trained a 1.3B-parameter code model using
+6B filtered web tokens plus 1B GPT-3.5-generated textbook and exercise tokens. It
+reported 50.6 percent pass@1 on HumanEval and 55.5 percent on MBPP. Those results
+do not establish a universal synthetic-data recipe. They counter the claim that
+synthetic data cannot add substantial value in a controlled mixed-data pipeline.</p>
+<p>The recursion research supplies the opposite boundary: generated data can erase
+tails when model outputs recursively replace observed data. The engineering rule
+is <code>MIX + VALIDATE</code>: record provenance and generation depth, preserve independent
+human-observed data, and test outcomes outside the generator loop.</p>
+<h3>Shortcut 3: &ldquo;Agreement proves correctness&rdquo;</h3>
+<p>High agreement can indicate a clear task. It can also indicate trivial examples,
+a narrow cohort, shared training, or a shared blind spot. Low agreement can signal
+bad instructions, but it can also reveal real plural preferences.</p>
+<p>The engineering rule is <code>CLASSIFY BEFORE AGGREGATING</code>: inspect distributions and
+clusters before choosing majority vote, adjudication, conditional policies, or
+multiple acceptable labels.</p>
+<h2>Run the audit on 50 items</h2>
+<p>Do not begin with a program-wide quality score. Begin with 50 items and one release
+decision.</p>
+<ol>
+<li>Select 50 recent or decision-critical examples. Include failures and edge cases;
+   do not sample only convenient passes.</li>
+<li>Write the exact decision each example informs. If that sentence is unclear,
+   mark the construct <code>unknown</code>.</li>
+<li>Create one row per item-control pair with these fields: <code>item_id</code>, <code>control</code>,
+   claim, evidence, metric, threshold, criticality, owner, remediation, and status.</li>
+<li>Define critical controls before inspecting results. For a public benchmark,
+   leakage and test validity may be critical. For a preference set, evaluator fit,
+   representation, and disagreement handling may be critical.</li>
+<li>Use only <code>pass</code>, <code>fail</code>, or <code>unknown</code>. Missing evidence is not a pass.</li>
+<li>Block the release when a critical control is <code>fail</code> or <code>unknown</code>. Do not average
+   either status away.</li>
+<li>Commit the audit with the dataset version. Rerun it when the source, instruction,
+   cohort, model, aggregation rule, or benchmark changes.</li>
+</ol>
+<h2>The audit rubric</h2>
+<p>Use one row per item-control pair. Every row carries the same fields, including a
+metric and one of three statuses: <code>pass</code>, <code>fail</code>, or <code>unknown</code>.</p>
+<h3>Construct rubric</h3>
+<ul>
+<li>Claim: Labels measure the intended behavior</li>
+<li>Evidence: Decision definition plus discriminating examples</li>
+<li>Metric: Share of pilot items with incompatible interpretations</li>
+<li>Example threshold: Fail above 10 percent</li>
+<li>Criticality: Set before inspection from the cost of construct error</li>
+<li>Owner: Task owner</li>
+<li>First remediation: Rewrite the construct and rerun the pilot</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<h3>Source rubric</h3>
+<ul>
+<li>Claim: Every item has reproducible lineage</li>
+<li>Evidence: Origin, transforms, generator, edits, and split links</li>
+<li>Metric: Critical items with unknown origin or confirmed leakage</li>
+<li>Example threshold: Fail above zero</li>
+<li>Criticality: Set before inspection from leakage and provenance risk</li>
+<li>Owner: Data engineer</li>
+<li>First remediation: Quarantine affected items and rebuild lineage</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<h3>Coverage rubric</h3>
+<ul>
+<li>Claim: Important deployment slices are measurable</li>
+<li>Evidence: Slice inventory, counts, and failure cost</li>
+<li>Metric: Item count per predeclared critical slice</li>
+<li>Example threshold: Fail below the predeclared minimum</li>
+<li>Criticality: Set before inspection from slice failure cost</li>
+<li>Owner: Data lead</li>
+<li>First remediation: Target collection or narrow the quality claim</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<h3>Evaluator fit rubric</h3>
+<ul>
+<li>Claim: Evaluators match the requested judgment</li>
+<li>Evidence: Cohort rationale and qualification evidence</li>
+<li>Metric: Judgments outside the documented competence boundary</li>
+<li>Example threshold: Fail above zero for critical judgments</li>
+<li>Criticality: Set before inspection from evaluator mismatch risk</li>
+<li>Owner: Study owner</li>
+<li>First remediation: Recruit a matched cohort or split the task</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<h3>Representation rubric</h3>
+<ul>
+<li>Claim: The panel matches affected populations well enough for the decision</li>
+<li>Evidence: Target-versus-sample table with uncertainty</li>
+<li>Metric: Sample size and uncertainty per critical population</li>
+<li>Example threshold: Fail when a critical population is absent or inestimable</li>
+<li>Criticality: Set before inspection from impact on affected populations</li>
+<li>Owner: Data lead</li>
+<li>First remediation: Rebalance the panel or narrow deployment scope</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<h3>Disagreement rubric</h3>
+<ul>
+<li>Claim: Aggregation preserves meaningful signal</li>
+<li>Evidence: Raw distributions and cluster analysis</li>
+<li>Metric: Stable subgroup splits collapsed without an explicit policy</li>
+<li>Example threshold: Fail above zero</li>
+<li>Criticality: Set before inspection from the cost of erasing plural preference</li>
+<li>Owner: Research lead</li>
+<li>First remediation: Preserve the distribution or define a conditional rule</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<h3>Validation rubric</h3>
+<ul>
+<li>Claim: Labels predict an independent outcome</li>
+<li>Evidence: Holdout preference, capability, or safety measure</li>
+<li>Metric: Change in the predeclared aggregate and critical-slice outcomes</li>
+<li>Example threshold: Fail when the target misses threshold or a critical slice regresses</li>
+<li>Criticality: Set before inspection from release consequence</li>
+<li>Owner: Evaluation lead</li>
+<li>First remediation: Reject the change and inspect the failed control</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<h3>Governance rubric</h3>
+<ul>
+<li>Claim: The release decision is reproducible and challengeable</li>
+<li>Evidence: Version, owner, rights, changes, escalation, and retirement record</li>
+<li>Metric: Required decision-record fields missing</li>
+<li>Example threshold: Fail above zero</li>
+<li>Criticality: Set before inspection from rights, accountability, and audit risk</li>
+<li>Owner: Accountable lead</li>
+<li>First remediation: Stop release until the record is complete</li>
+<li>Status: <code>pass</code>, <code>fail</code>, or <code>unknown</code></li>
+</ul>
+<p>The example thresholds are starting points, not a standard. Change them before the
+audit based on consequence and sample size. Do not tune them after seeing results.</p>
+<h2>Build it yourself: 3 projects to try this week</h2>
+<p><img alt="An ascending project trail accumulates an audit CSV, disagreement report, and passing regression gate." src="visuals/v03-project-ladder.png" /></p>
+<h3>Project 1: Audit a 50-item benchmark slice (Beginner)</h3>
+<p>Goal: Build a versioned CSV audit that exposes the first failed or unknown control
+in a benchmark or preference dataset.</p>
+<p>Prerequisites: Python 3.11 or later, a Git repository, and 50 non-sensitive items
+from a dataset you are allowed to inspect.</p>
+<p>Steps:</p>
+<ol>
+<li>Create <code>audit.csv</code> with one row per item-control pair and columns for <code>item_id</code>,
+   control, claim, evidence link, metric, threshold, criticality, owner,
+   remediation, and status.</li>
+<li>Define one release decision and mark its critical controls in <code>audit-policy.yaml</code>.</li>
+<li>Score each item <code>pass</code>, <code>fail</code>, or <code>unknown</code>; preserve raw notes instead of
+   converting uncertainty into a numeric average.</li>
+<li>Write a small Python check that exits nonzero when a critical control contains
+   <code>fail</code> or <code>unknown</code>.</li>
+<li>Commit the CSV, policy, script, and generated summary together.</li>
+</ol>
+<p>Success signal: <code>python check_audit.py audit.csv audit-policy.yaml</code> exits with code
+1 for an intentionally failed critical control and code 0 after remediation.</p>
+<p>Time: 90 minutes.</p>
+<p>Stretch goal: Compare your fields with the reproducible evaluation and dataset
+structure in the <a href="https://github.com/SWE-bench/SWE-bench">SWE-bench repository</a>,
+then add a leakage-specific check for your domain.</p>
+<p>Start from: No template is required. Begin with an empty repository and the two
+files above; use SWE-bench only as an inspectable benchmark-harness reference.</p>
+<h3>Project 2: Measure disagreement before majority vote (Intermediate)</h3>
+<p>Goal: Build a subgroup and disagreement report that distinguishes ambiguous items
+from stable plural preferences.</p>
+<p>Prerequisites: Project 1, Python with pandas or Polars, at least three judgments per
+item, and one evaluator attribute that is relevant and lawful to analyze.</p>
+<p>Steps:</p>
+<ol>
+<li>Preserve one row per judgment rather than one aggregated row per item.</li>
+<li>Compute the label distribution, entropy, and agreement statistic per item.</li>
+<li>Compare distributions across the predeclared evaluator groups and report sample
+   sizes alongside every difference.</li>
+<li>Assign high-disagreement items to error, ambiguity, plural preference, or drift;
+   allow <code>unclassified</code> rather than forcing an answer.</li>
+<li>Export <code>disagreement-report.csv</code> and a machine-readable list of items whose
+   aggregation policy must be reviewed.</li>
+</ol>
+<p>Success signal: <code>pytest</code> exits 0 only when a unanimous fixture maps to <code>agreement</code>,
+a random fixture maps to <code>unstable</code>, and a stable group split maps to
+<code>plural-preference</code>.</p>
+<p>Time: Half a day.</p>
+<p>Stretch goal: Adapt the representativeness notebook in the
+<a href="https://github.com/tatsu-lab/opinions_qa">OpinionsQA repository</a> to compare your
+model or label distributions with a declared target distribution.</p>
+<p>Start from: The OpinionsQA repository provides 1,498 questions, human response
+distributions, precomputed model runs, and notebooks for representativeness,
+steerability, consistency, and refusals.</p>
+<h3>Project 3: Build a continuous human-feedback regression gate (Advanced)</h3>
+<p>Goal: Build a local pipeline that samples changed outputs, collects structured
+human judgments, versions the resulting data, and fails a test when a critical
+slice regresses.</p>
+<p>Prerequisites: Projects 1 and 2, Docker or a local Python environment, pytest, and
+non-sensitive model outputs or agent traces.</p>
+<p>Steps:</p>
+<ol>
+<li>Configure <a href="https://github.com/davidjurgens/potato">Potato</a> for pairwise or
+   per-step evaluation with training items, raw judgment export, and adjudication.</li>
+<li>Define a sampling rule that always includes changed outputs, prior failures, and
+   one rare but high-cost slice.</li>
+<li>Export judgments without discarding evaluator or item identifiers needed for
+   approved subgroup and disagreement analysis.</li>
+<li>Version data, parameters, and metrics with
+   <a href="https://github.com/treeverse/dvc">DVC</a>, keeping sensitive payloads in an
+   appropriate local or controlled remote store.</li>
+<li>Add a pytest regression check for one aggregate metric and at least one critical
+   slice. Fail on missing evidence as well as measured regression.</li>
+<li>Run the gate against a deliberately degraded output set and store the failed
+   audit artifact with the pipeline version.</li>
+</ol>
+<p>Success signal: The CI or local test passes on the baseline data, fails on the
+deliberately degraded critical slice, and reproduces both results from versioned
+inputs and parameters.</p>
+<p>Time: A weekend.</p>
+<p>Stretch goal: Add boundary probes that make small counterfactual edits and flag
+evaluators whose labels change on meaning-preserving paraphrases.</p>
+<p>Start from: Potato is a free, self-hosted annotation platform with agent-trace,
+agreement, adjudication, behavioral, and continuous-evaluation support. DVC versions
+data, pipelines, parameters, and metrics locally or with a controlled remote.</p>
+<h2>Replace the label with a claim</h2>
+<p>Human judgment matters. The 1.3B-versus-175B InstructGPT preference result makes
+that difficult to deny. Synthetic data can matter too. Phi-1 makes a universal
+ceiling difficult to defend. Scale still matters for candidate diversity and tail
+coverage. DataComp-LM and long-tail research make &ldquo;volume is solved&rdquo; too broad.</p>
+<p>The useful question is not which category wins. It is whether the data system can
+defend the decision placed on top of it.</p>
+<p>Start with Project 1. Audit 50 items, predeclare one blocking threshold, and record
+the first control that fails or remains unknown. That result is more actionable
+than another dataset described only as &ldquo;high quality.&rdquo;</p>
+
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+
+</body>
+</html>
