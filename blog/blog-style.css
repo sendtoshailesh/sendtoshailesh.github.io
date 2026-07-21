@@ -296,6 +296,8 @@ a:hover { text-decoration: underline; }
   .blog-hero h1 { font-size: 1.6rem; }
   .blog-container { padding: 1.5rem 1rem 3rem; }
   .post-header h1 { font-size: 1.4rem; }
+  .post-content table { table-layout: fixed; }
+  .post-content th, .post-content td { overflow-wrap: anywhere; }
   .post-content img {
     width: 100%;
     max-width: 100%;

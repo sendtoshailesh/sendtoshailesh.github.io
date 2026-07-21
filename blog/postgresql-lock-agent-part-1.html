@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnose PostgreSQL Locks: Find the Root Blocker (Part 1) | Shailesh Mishra</title>
+<meta name="description" content="Diagnose PostgreSQL lock issues with a read-only agent: trace the blocking chain with pg_blocking_pids, tell deadlocks from lock timeouts, and emit one report.">
+<meta name="author" content="Shailesh Mishra">
+<meta name="date" content="2026-07-21">
+<meta name="keywords" content="PostgreSQL lock diagnosis, pg_blocking_pids, blocking chain, deadlock vs lock timeout, pg_locks, pg_stat_activity, hot-row contention, LangGraph agent">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/postgresql-lock-agent-part-1.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/postgresql-lock-agent-part-1.html">
+<meta property="og:title" content="Diagnose PostgreSQL Locks: Find the Root Blocker (Part 1)">
+<meta property="og:description" content="Diagnose PostgreSQL lock issues with a read-only agent: trace the blocking chain with pg_blocking_pids, tell deadlocks from lock timeouts, and emit one report.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/postgresql-lock-agent-part-1-hero.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="Diagnose PostgreSQL Locks: Find the Root Blocker (Part 1)">
+<meta name="twitter:description" content="Diagnose PostgreSQL lock issues with a read-only agent: trace the blocking chain with pg_blocking_pids, tell deadlocks from lock timeouts, and emit one report.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/postgresql-lock-agent-part-1-hero.png">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>Find the Root Blocker: Build an Evidence-First PostgreSQL Lock Agent (Part 1)</h1>
+      <div class="meta">Shailesh Mishra &middot; July 21, 2026 &middot; 16 min read</div>
+      <div class="tags">
+        <span class="post-tag">postgresql</span>
+        <span class="post-tag">lock-diagnosis</span>
+        <span class="post-tag">ai-agents</span>
+        <span class="post-tag">langgraph</span>
+        <span class="post-tag">series-part-1</span>
+      </div>
+    </div>
+
+    <figure class="post-hero">
+      <img src="visuals/postgresql-lock-agent-part-1-hero.png" alt="Find the Root Blocker: Build an Evidence-First PostgreSQL Lock Agent, Part 1">
+    </figure>
+
+    <div class="post-content">
+      <p>A PostgreSQL query has been stuck for four minutes. Your dashboard highlights the session that is waiting, its runtime climbing in red. The tempting move is obvious: copy the PID, call <code>pg_terminate_backend</code>, and move on. I have watched skilled engineers do exactly this under pressure &mdash; and kill the wrong session, because the query the dashboard shows you waiting is almost never the transaction actually holding the lock. That gap is the whole problem in PostgreSQL lock diagnosis: the loudest session is the wrong one to touch.</p>
+
+      <p>This is the first of a two-part series on building a <em>guarded</em> PostgreSQL lock diagnosis agent. Part 1 is about evidence: how to find the real root blocker, how to package every incident into one machine-checkable report, and how to keep the whole thing read-only so it physically cannot amplify an outage. Part 2 adds the authority ladder &mdash; when a system may cancel or terminate, and whether orchestrating this with an agent measurably beats a plain script. Everything here is backed by a public, runnable lab you can clone: <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab">postgres-lock-agent-lab</a>.</p>
+
+      <p>One boundary holds from the first line to the last: <strong>diagnosis never grants the authority to act.</strong> A perfect report is still just a report.</p>
+
+      <h2>1. Find the root blocker, not the waiting query</h2>
+      <p>Picture three sessions. Session A opened a transaction and updated row 1 but never committed. Session B updated row 2, then tried to update row 1 and is now waiting behind A. Session C tried to update row 2 and is waiting behind B. Your dashboard, sorted by wait time, screams about C. C is the <em>visible waiter</em>. It is the most downstream, most innocent participant in the chain.</p>
+      <p>The naive fix &mdash; target the oldest or longest-waiting query &mdash; is wrong for a structural reason. Blocking in PostgreSQL is a graph, not a list, and the node you can see is a leaf. To find the root you have to traverse the edges.</p>
+
+      <img src="visuals/v01-root-blocker-graph.png" alt="A directed session and lock graph with visible waiters tracing queue-aware hard and soft blocker edges to one root blocker">
+      <p><em>The visible waiter is a leaf. Trace the queue-aware edges back to the one session no edge leaves: the root blocker.</em></p>
+
+      <h3>Hard blockers, soft blockers, and the wait queue</h3>
+      <p>PostgreSQL exposes the right traversal function directly. Per the <a href="https://www.postgresql.org/docs/current/functions-info.html">System Information Functions</a> documentation, <code>pg_blocking_pids(pid)</code> returns the process IDs blocking a target process from acquiring a lock. Crucially, it returns two kinds of blocker:</p>
+      <ul>
+        <li><strong>Hard blockers</strong> already hold a conflicting lock on the object the target wants.</li>
+        <li><strong>Soft blockers</strong> do not hold a conflicting lock yet, but their conflicting request sits ahead of the target in the wait queue.</li>
+      </ul>
+      <p>That second category is why you cannot reconstruct the truth from granted locks alone. The <a href="https://www.postgresql.org/docs/current/view-pg-locks.html"><code>pg_locks</code> view</a> tempts you to build this yourself with a self-join, but blocker identity depends on both held locks and wait-queue order. A self-join over granted rows silently drops every soft blocker.</p>
+
+      <h3>The queue-aware rule behind pg_blocking_pids()</h3>
+      <p>The root blocker is the session that blocks others but is itself blocked by no one. In graph terms, walk the <code>pg_blocking_pids()</code> edges and find the node with no incoming block edge. The lab implements that rule in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/main/src/lock_agent/adapters.py"><code>adapters.py</code></a>:</p>
+      <pre><code>edges = {
+    int(row["pid"]): tuple(int(pid) for pid in row.get("blocking_pids") or ())
+    for row in activity
+    if row.get("blocking_pids")
+}
+all_waiters = set(edges)
+all_blockers = {pid for blockers in edges.values() for pid in blockers}
+roots = sorted(all_blockers - all_waiters)
+if len(roots) != 1:
+    raise InsufficientEvidenceError("blocking chain must resolve to exactly one root")</code></pre>
+      <p><code>all_blockers - all_waiters</code> is the whole idea: a session that appears as someone&rsquo;s blocker but never as a waiter. If the snapshot produces zero or several roots, the adapter refuses to guess.</p>
+
+      <h2>2. Standardize one incident report, not one evidence path</h2>
+      <p>Five failure modes leave five different kinds of evidence. A live blocking chain gives you a graph right now. A deadlock is already gone by the time you look because PostgreSQL resolved it. The useful design move is to <strong>standardize the output, not the evidence path.</strong></p>
+
+      <h3>The eight-field incident report contract</h3>
+      <p>The shared report, defined in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/main/src/lock_agent/report.py"><code>report.py</code></a> as a frozen Pydantic model with <code>extra="forbid"</code>, has exactly eight fields:</p>
+      <table>
+        <thead><tr><th>#</th><th>Field</th><th>What it holds</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>observation_timestamp</code></td><td>When the evidence was collected</td></tr>
+          <tr><td>2</td><td><code>classification</code></td><td>The incident mode</td></tr>
+          <tr><td>3</td><td><code>root_source</code></td><td>The root blocker or contention source</td></tr>
+          <tr><td>4</td><td><code>supporting_observations</code></td><td>Normalized evidence backing the classification</td></tr>
+          <tr><td>5</td><td><code>confidence</code></td><td>High, medium, or low</td></tr>
+          <tr><td>6</td><td><code>recommendation</code></td><td>A preventive change or proposed action</td></tr>
+          <tr><td>7</td><td><code>authority_requirement</code></td><td>Observe-only, approval-gated, or bounded action</td></tr>
+          <tr><td>8</td><td><code>audit_record</code></td><td>Inputs, policy result, and report ID</td></tr>
+        </tbody>
+      </table>
+      <p>The envelope is this guide&rsquo;s synthesis, not PostgreSQL-native terminology. Every Part 1 adapter sets authority to <code>observe_or_recommend_only</code>.</p>
+
+      <h3>Five evidence states for lock diagnosis</h3>
+      <ul>
+        <li><strong><code>live</code></strong> &mdash; collected while the condition is active.</li>
+        <li><strong><code>historical</code></strong> &mdash; retained evidence of an event PostgreSQL resolved.</li>
+        <li><strong><code>inferred</code></strong> &mdash; a pattern assembled from repeated samples.</li>
+        <li><strong><code>stale</code></strong> &mdash; evidence old enough that identities may have changed.</li>
+        <li><strong><code>insufficient</code></strong> &mdash; not enough to support classification.</li>
+      </ul>
+      <img src="visuals/v02-evidence-half-life.png" alt="An incident timeline showing live, historical, inferred, stale, and insufficient evidence states">
+      <p><em>The same incident yields different provable facts depending on when you look. The five-state taxonomy is this guide&rsquo;s synthesis.</em></p>
+      <p>The report validator enforces the relationship between state and confidence:</p>
+      <pre><code>if self.confidence is Confidence.HIGH and any(
+    item.state in {EvidenceState.STALE, EvidenceState.INSUFFICIENT}
+    for item in self.supporting_observations
+):
+    raise ValueError("high confidence cannot rely on stale or insufficient evidence")</code></pre>
+      <p>Observed facts and inferences stay separate. <code>pg_blocking_pids()</code> returning <code>[101]</code> for session 102 is observed. Concluding hot-row contention from three repeated samples is inferred.</p>
+
+      <h2>3. Build the read-only diagnostic collector</h2>
+      <p>The collector in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/main/src/lock_agent/collector.py"><code>collector.py</code></a> uses fixed, allowlisted SQL. It reads current activity, builds queue-aware edges, explains them with <code>pg_locks</code>, and reads relevant timeout configuration. No model-generated queries are permitted.</p>
+      <pre><code>SELECT
+    a.pid, a.usename, a.application_name, a.state,
+    a.xact_start, a.query_start, a.wait_event_type, a.wait_event,
+    pg_blocking_pids(a.pid) AS blocking_pids
+FROM pg_catalog.pg_stat_activity AS a
+WHERE a.datname = current_database()
+  AND a.pid &lt;&gt; pg_backend_pid()
+  AND a.backend_type = 'client backend'
+ORDER BY a.pid;</code></pre>
+      <p>The connection is forced read-only, and tests assert that it executes exactly the allowlisted queries in order.</p>
+
+      <h3>Why pg_stat_activity is evidence, not truth</h3>
+      <ul>
+        <li><strong>Snapshot drift.</strong> Waits can appear and vanish between catalog reads.</li>
+        <li><strong>Statistics caching.</strong> Cumulative counters can lag and do not provide incident timing.</li>
+        <li><strong>PID 0.</strong> Prepared transactions can hold locks without a live backend to signal.</li>
+        <li><strong>Duplicate PIDs.</strong> Parallel workers can surface duplicate client-visible PIDs.</li>
+        <li><strong>Privilege limits.</strong> Partial visibility must lower confidence.</li>
+        <li><strong>Null <code>waitstart</code>.</strong> New waits can briefly lack a start time.</li>
+        <li><strong>Polling overhead.</strong> Collection touches shared lock-manager state and is not free.</li>
+      </ul>
+      <p>The honest way to state collection cost is reproducible by you: compare latency and throughput with diagnostics disabled versus enabled using <code>pgbench</code>, retain the raw logs, and report the measured delta.</p>
+
+      <h2>4. Five lock failure modes, one shared report</h2>
+      <p>Each failure mode gets its own adapter. Every adapter reads immutable evidence and returns the same eight-field report or raises <code>InsufficientEvidenceError</code>. The LangGraph workflow has no cancel, terminate, DDL, or arbitrary-SQL node.</p>
+      <img src="visuals/v03-five-adapter-matrix.png" alt="Five diagnostic modes arranged around one shared eight-field incident report">
+
+      <h3>Live blocking chain</h3>
+      <p>The queue-aware <code>pg_blocking_pids()</code> graph can support high confidence when it resolves to one root. It cannot prove what the snapshot missed.</p>
+
+      <h3>Resolved deadlock</h3>
+      <p>PostgreSQL aborts one transaction to break a deadlock. By the time you query live views, the graph is gone. The adapter therefore requires retained historical evidence with SQLSTATE <code>40P01</code>. <code>pg_stat_database.deadlocks</code> proves that deadlocks occurred but cannot reconstruct one incident.</p>
+
+      <h3>Completed lock timeout</h3>
+      <p>A lock timeout is not a deadlock. It uses a per-lock-acquisition timer and SQLSTATE <code>55P03</code>; a deadlock uses cycle detection and SQLSTATE <code>40P01</code>. Once resolved, both require retained evidence rather than live views.</p>
+
+      <h3>DDL or migration queue</h3>
+      <p>A queued <code>ACCESS EXCLUSIVE</code> request can sit ahead of later readers and stall an entire table before the DDL acquires its lock. This is where soft blockers matter. The adapter identifies the queue but does not infer a universal lock mode from an <code>ALTER TABLE</code> command tag.</p>
+
+      <h3>Hot-row contention</h3>
+      <p>There is no catalog flag for hot-row contention. The adapter requires at least three samples recurring on the same contention key, marks the evidence inferred, and caps confidence at medium. Three samples are a tested lab policy, not a PostgreSQL fact.</p>
+
+      <h2>5. Build it yourself: three PostgreSQL lock agent projects</h2>
+      <h3>Project 1: Reproduce a live blocking chain</h3>
+      <p><strong>Goal:</strong> Reproduce a two-hop chain in disposable PostgreSQL 18, emit the report, and prove the workflow cannot reach mutation.</p>
+      <ol>
+        <li>Start the lab with <code>docker compose up -d --wait</code>.</li>
+        <li>Run <code>uv run --group dev pytest</code>.</li>
+        <li>Set <code>LOCK_AGENT_TEST_DSN</code> and run <code>tests/test_live_postgres.py</code>.</li>
+        <li>Add a mutation node and verify <code>test_graph_exposes_no_mutation_node</code> fails.</li>
+      </ol>
+      <p><strong>Success signal:</strong> the live chain resolves the first transaction as <code>root_source</code>, and any reachable mutation node turns the safety test red.</p>
+
+      <h3>Project 2: Exercise five adapters and confidence limits</h3>
+      <p><strong>Goal:</strong> Drive every adapter from fixtures and prove each refuses classification without discriminating evidence.</p>
+      <ol>
+        <li>Run the parametrized shared-report test for all five modes.</li>
+        <li>Feed live-only evidence to the deadlock adapter.</li>
+        <li>Feed one sample to the hot-row adapter.</li>
+        <li>Attempt a high-confidence report with stale evidence.</li>
+      </ol>
+      <p><strong>Success signal:</strong> valid fixtures produce the exact eight-field shape while all three invalid inputs are rejected.</p>
+
+      <h3>Project 3: Harden the collector and measure cost</h3>
+      <p><strong>Goal:</strong> handle snapshot drift, PID 0, duplicate PIDs, null <code>waitstart</code>, and privilege limits, then measure collector overhead.</p>
+      <ol>
+        <li>Add focused collector fixtures for each caveat.</li>
+        <li>Run under a restricted role and lower confidence when visibility is incomplete.</li>
+        <li>Run fixed-seed <code>pgbench</code> trials with diagnostics off and on.</li>
+        <li>Commit matching raw log sets and report the measured delta.</li>
+      </ol>
+      <p><strong>Success signal:</strong> caveat tests pass, restricted visibility cannot silently truncate a high-confidence graph, and the overhead comparison is reproducible.</p>
+
+      <h2>What Part 2 covers</h2>
+      <p>Part 1 stops exactly where authority begins. You now have a read-only agent that finds the true root blocker, normalizes five failure modes into one testable report, expresses honest confidence, and cannot reach a mutation tool.</p>
+      <p>Part 2 covers why a supported report still does not grant permission to act, how to prevent stale or unrestricted database actions, when to use <code>pg_cancel_backend</code> versus <code>pg_terminate_backend</code>, and whether orchestration measurably beats a deterministic script.</p>
+
+      <div class="callout">
+        <strong>Until then, the boundary holds: better diagnosis is not more authority.</strong> Clone the <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab">lab</a>, reproduce the chain, and make the guard fail on purpose so you know it works.
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+</body>
+</html>
