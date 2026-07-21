@@ -209,7 +209,7 @@ def collect_posts(blog_dir: Path) -> list[Post]:
         post = parse_post(path)
         if post is not None:
             posts.append(post)
-    posts.sort(key=lambda p: p.published, reverse=True)
+    posts.sort(key=lambda p: (p.published, p.slug), reverse=True)
     return posts
 
 

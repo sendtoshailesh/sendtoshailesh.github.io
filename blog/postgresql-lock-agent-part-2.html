@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guard PostgreSQL Lock Remediation: Authority and Evidence (Part 2) | Shailesh Mishra</title>
+<meta name="description" content="Build a guarded PostgreSQL lock remediation path with fresh PID checks, approval IDs, fixed SQL, cancel versus terminate semantics, and an honest LangGraph baseline verdict.">
+<meta name="author" content="Shailesh Mishra">
+<meta name="date" content="2026-07-21">
+<meta name="keywords" content="PostgreSQL lock remediation, pg_cancel_backend, pg_terminate_backend, LangGraph baseline, database incident response, guarded autonomy">
+<link rel="canonical" href="https://sendtoshailesh.github.io/blog/postgresql-lock-agent-part-2.html">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://sendtoshailesh.github.io/blog/postgresql-lock-agent-part-2.html">
+<meta property="og:title" content="Guard PostgreSQL Lock Remediation: Authority and Evidence (Part 2)">
+<meta property="og:description" content="Build a guarded PostgreSQL lock remediation path with fresh PID checks, approval IDs, fixed SQL, cancel versus terminate semantics, and an honest LangGraph baseline verdict.">
+<meta property="og:image" content="https://sendtoshailesh.github.io/blog/visuals/v04-authority-confidence-ladder.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@sendtoshailesh">
+<meta name="twitter:title" content="Guard PostgreSQL Lock Remediation: Authority and Evidence (Part 2)">
+<meta name="twitter:description" content="Build a guarded PostgreSQL lock remediation path with fresh PID checks, approval IDs, fixed SQL, cancel versus terminate semantics, and an honest LangGraph baseline verdict.">
+<meta name="twitter:image" content="https://sendtoshailesh.github.io/blog/visuals/v04-authority-confidence-ladder.png">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog-style.css">
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="blog-header">
+  <div class="header-inner">
+    <a href="../" class="logo">Shailesh Mishra</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="./">Blog</a>
+      <a href="../portfolio.html">Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content" class="blog-container">
+  <a href="./" class="back-link">&larr; Back to all posts</a>
+
+  <article>
+    <div class="post-header">
+      <h1>Guard PostgreSQL Lock Remediation: Authority and Evidence (Part 2)</h1>
+      <div class="meta">Shailesh Mishra &middot; July 21, 2026 &middot; 18 min read</div>
+      <div class="tags">
+        <span class="post-tag">postgresql</span>
+        <span class="post-tag">lock-remediation</span>
+        <span class="post-tag">guarded-autonomy</span>
+        <span class="post-tag">langgraph</span>
+        <span class="post-tag">series-part-2</span>
+      </div>
+    </div>
+
+    <div class="post-content">
+      <p class="series-nav"><strong>Two-part series:</strong> <a href="/blog/postgresql-lock-agent-part-1.html">Part 1: Find the Root Blocker</a> &middot; Part 2: Guard Lock Remediation</p>
+
+      <h2>The incident report says cancel. The policy says no</h2>
+      <p>The root blocker is session 101. The report has high confidence. Requests are timing out, and every second feels expensive. An operator approves cancellation, but more than five seconds have passed since collection. Session 101 has disconnected, and PostgreSQL may already have assigned that PID to a different backend. The right action is no action. A useful remediation system must be able to turn a confident diagnosis into a denial when the target, approval, or evidence no longer matches.</p>
+      <p><a href="/blog/postgresql-lock-agent-part-1.html">Part 1</a> built the read-only side: five evidence adapters produce the same eight-field incident report, and a diagnosis-only LangGraph identifies a root source without exposing mutation. Part 2 starts after that report exists. It asks whether one specific action is eligible now, then tests whether LangGraph adds diagnostic value over the same deterministic Python path.</p>
+      <p>My working rule for this lab is deliberately strict: a report may recommend an action, but only current identity, policy, and approval evidence can make that action eligible.</p>
+
+      <h2>The evidence contract entering authority</h2>
+      <p>Authority starts from the same bounded evidence contract, not from a fresh model guess. For an active blocking chain, the collector reads <a href="https://www.postgresql.org/docs/18/monitoring-stats.html"><code>pg_stat_activity</code></a>, <a href="https://www.postgresql.org/docs/18/view-pg-locks.html"><code>pg_locks</code></a>, and the queue-aware <a href="https://www.postgresql.org/docs/18/functions-info.html"><code>pg_blocking_pids()</code></a> function. The adapter builds waiter-to-blocker edges, then computes candidate roots as all blockers minus all waiters. It refuses the classification unless exactly one root blocker remains. That rule distinguishes the session holding up the chain from the downstream query that happens to be most visible.</p>
+      <p>Every adapter emits eight fields: observation timestamp, classification, root source, supporting observations, confidence, recommendation, authority requirement, and audit record. Live blocking chains, retained deadlock errors, completed lock timeouts, queued DDL, and inferred hot-row contention take different evidence paths, but policy always receives that same report shape.</p>
+      <p>Two distinctions remain important at the action boundary.</p>
+      <p>Q9 asks how deadlocks differ from lock timeouts. <a href="https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-DEADLOCKS">Deadlock detection</a> finds a cycle and PostgreSQL aborts a victim with SQLSTATE <code>40P01</code>. A configured <a href="https://www.postgresql.org/docs/18/runtime-config-client.html#GUC-LOCK-TIMEOUT"><code>lock_timeout</code></a> instead applies to each lock acquisition wait, while <code>statement_timeout</code> limits total statement execution. Once either event resolves, live views cannot reconstruct it; the report needs historical error and timing evidence.</p>
+      <p>Q10 asks how queued DDL can block later reads before its lock is granted. An <code>ALTER TABLE</code> request waiting for <code>ACCESS EXCLUSIVE</code> can sit ahead of later <code>ACCESS SHARE</code> readers in the wait queue, as shown in this <a href="https://www.citusdata.com/blog/2018/02/15/when-postgresql-blocks/">reproducible queued-DDL example</a>. The exact DDL lock mode varies by subcommand and PostgreSQL version, so the adapter verifies the observed mode rather than labeling every migration the same way.</p>
+      <p>These facts determine what the report may say. They still do not determine whether any action may run.</p>
+
+      <h2>Diagnosis confidence is not mutation eligibility</h2>
+      <p>A diagnostic report answers, “What does the collected evidence support?” An authority policy answers a different question: “May this identity perform this action against this target at this moment?” Keeping those dimensions independent closes Q6 from the series FAQ. A high-confidence report can still fail on six action conditions: configured authority, evidence freshness, protected targets, root-target match, approval, and action blast radius.</p>
+      <p>The lab encodes three authority levels in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/authority.py"><code>authority.py</code></a>. These levels consume the same report. They do not change its classification or confidence.</p>
+      <div class="callout teal">
+        <strong>Validated source:</strong> The Part 2 files are public at lab commit <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/commit/d600bdd"><code>d600bdd</code></a>. The commit-pinned links preserve the reviewed implementation even if <code>main</code> changes later.
+      </div>
+      <table>
+        <thead>
+          <tr><th>Authority level</th><th>Permitted capability</th><th>Required boundary</th><th>Lab termination rule</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Observe and recommend</td><td>Read evidence and return a recommendation</td><td>Diagnostic credentials are read-only and mutation stays outside the graph</td><td>Always denied</td></tr>
+          <tr><td>Approval-gated action</td><td>Execute one typed, freshly verified action</td><td>Valid approval ID, policy match, separate action connection, audit result</td><td>Eligible only under explicit approval and the remaining checks</td></tr>
+          <tr><td>Bounded autonomous action</td><td>Execute one pre-authorized cancellation</td><td>Fresh high-confidence evidence, root-target match, protected-PID rule, fixed allowlist</td><td>Always denied in this lab</td></tr>
+        </tbody>
+      </table>
+      <p>This ladder is intentionally conservative. Level 1 can produce a perfect report and still execute nothing. Level 2 does not approve “remediate the incident” as an open-ended goal; it approves a typed request containing one action, one positive PID, one expected <code>backend_start</code>, one request timestamp, and one approval ID. Level 3 is narrower than its name may suggest. It can cancel a current query only when every policy predicate passes. It cannot terminate a session.</p>
+      <p>Reversibility and blast radius explain that asymmetry. Canceling one current query leaves the backend session alive. Terminating a session ends it and can roll back its open transaction, release every lock it holds, and disrupt any application work attached to that connection. The lab therefore treats termination as too broad for bounded autonomy, regardless of diagnostic confidence.</p>
+      <p>The policy is also identity-aware. The diagnostic collector remains read-only; the action executor uses a separate connection boundary. The current lab models that separation in code rather than provisioning database roles, so it is not a production least-privilege guarantee. A deployment would still need distinct credentials and PostgreSQL grants for observation and signaling.</p>
+      <img src="visuals/v04-authority-confidence-ladder.png" alt="Authority ladder separating diagnosis confidence from execution authority">
+      <p><em>Authority rises through explicit gates, while bounded autonomy still prohibits session termination.</em></p>
+
+      <h2>Put policy between the report and PostgreSQL</h2>
+      <p>Q7 asks what prevents unrestricted or stale actions. The answer is not one prompt instruction. It is a chain of typed and independently testable boundaries: read-only diagnosis, a fixed action enum, fail-closed policy, fresh backend identity verification, parameterized SQL, and a returned execution record.</p>
+      <p>The diagnostic LangGraph does not own any part of that mutation chain. It remains the same single diagnosis node from Part 1. Actions live outside the graph behind the policy function and executor. This makes a report an input to authorization, not an implicit tool call. Adding an approval checkpoint to the diagnostic graph would blur that ownership boundary before the workflow has earned the extra complexity.</p>
+
+      <h3>Step 1: construct one typed request</h3>
+      <p>The request schema in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/authority.py"><code>authority.py</code></a> forbids extra fields and freezes the accepted values:</p>
+      <pre><code>class ActionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    action: DatabaseAction
+    target_pid: int = Field(gt=0)
+    expected_backend_start: datetime
+    requested_at: datetime
+    approval_id: str | None = None</code></pre>
+      <p><code>DatabaseAction</code> contains exactly two members: <code>cancel_query</code> and <code>terminate_session</code>. There is no arbitrary SQL field, natural-language command, DDL option, or transaction-control tool. The model can recommend an action in a report, but it cannot expand the executor’s vocabulary.</p>
+      <p><code>expected_backend_start</code> matters as much as <code>target_pid</code>. A PID identifies a server process at one point in time, not a permanent session identity. If the original backend exits and PostgreSQL later reuses its PID, targeting by PID alone can signal unrelated work. The request therefore carries the backend start time observed for the diagnosed session, which the executor must match again at the last possible moment.</p>
+
+      <h3>Step 2: evaluate every predicate and fail closed</h3>
+      <p>The policy implementation is deliberately deterministic. It checks the report and request in a fixed order:</p>
+      <pre><code>if policy.level is AuthorityLevel.OBSERVE:
+    return "observe authority cannot execute database actions"
+if report.confidence is not Confidence.HIGH:
+    return "action requires a high-confidence diagnostic report"
+if request.requested_at - report.observation_timestamp &gt; policy.max_evidence_age:
+    return "diagnostic evidence is stale"
+if request.target_pid in policy.protected_pids:
+    return "target PID is protected"
+if report.root_source != f"session {request.target_pid}":
+    return "target PID is not the diagnosed root blocker"</code></pre>
+      <p>The default evidence-age limit is five seconds. That is a lab policy choice, not a PostgreSQL recommendation or a universal incident threshold. The important behavior is the comparison: once the request falls outside the configured age, the policy denies it instead of lowering a score and proceeding.</p>
+      <p>Protected PIDs provide a direct exclusion list for sessions that policy must not touch. Root-target matching prevents a request from switching the diagnosed session after approval. The approval-gated level then requires the request’s <code>approval_id</code> to appear in <code>approved_request_ids</code>. The policy checks the ID, not whether a chat message happens to contain the word “approved.” At bounded autonomy, the final predicate rejects every <code>terminate_session</code> request.</p>
+      <p>Seven policy tests in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_authority.py"><code>test_authority.py</code></a> exercise observe-only denial, matching approval, stale evidence, wrong-root targeting, protected PIDs, autonomous termination, and low confidence. The tests demonstrate the configured in-process policy behavior. They do not prove that a production role, network path, or external approval store cannot be bypassed.</p>
+
+      <h3>Step 3: revalidate identity, then execute fixed SQL</h3>
+      <p>An allowed policy decision is necessary, but it is still not execution authority by itself. The executor in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/actions.py"><code>actions.py</code></a> first verifies that the decision matches the request’s action and PID. It then re-reads the current backend identity with a parameterized query:</p>
+      <pre><code>BACKEND_IDENTITY_SQL = """
+SELECT backend_start
+FROM pg_catalog.pg_stat_activity
+WHERE pid = %s
+  AND backend_type = 'client backend'
+"""
+CANCEL_SQL = "SELECT pg_catalog.pg_cancel_backend(%s)"
+TERMINATE_SQL = "SELECT pg_catalog.pg_terminate_backend(%s, %s)"</code></pre>
+      <p>If the row is gone or <code>backend_start</code> differs from <code>expected_backend_start</code>, execution raises <code>ActionExecutionError</code> before any signal function runs. This handles both a vanished target and PID reuse. Only an exact identity match reaches one of the two fixed statements. Parameters carry the PID and timeout; model output never changes the SQL text.</p>
+      <p>Five executor tests in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_actions.py"><code>test_actions.py</code></a> pin the query order, fixed SQL, parameter tuples, positive termination timeout, denied-policy behavior, reused-PID refusal, and decision-request matching. Together with the seven policy tests, the measured deterministic authority and executor slice is 12 passing tests. The implementation also denies a missing PID, but that path does not have a dedicated assertion in the five-test executor suite.</p>
+      <p>The returned <code>ActionExecution</code> records the action, target PID, Boolean signal result, and verified backend start. That is an auditable executor result, but the current lab does not yet persist an immutable external audit log or perform a second post-action catalog read. Those are required before presenting the design as a production workflow. “Audit” and “post-action verification” are therefore architecture requirements here, not completed production capabilities.</p>
+      <img src="visuals/v05-policy-execution-flow.png" alt="Guarded policy-to-execution flow with deny branches and unfinished requirements">
+      <p><em>One guarded mutation path separates diagnostic evidence from fixed SQL, with fail-closed denial and unfinished audit requirements shown explicitly.</em></p>
+
+      <h2>Cancel a query or terminate a session</h2>
+      <p>Q12 requires a precise distinction because these functions do not have the same effect or confirmation semantics. PostgreSQL 18 documents both in <a href="https://www.postgresql.org/docs/18/functions-admin.html">System Administration Functions</a>.</p>
+      <p><code>pg_cancel_backend(pid)</code> sends a request to cancel the backend’s current query. The session remains connected and can run later statements. In an incident, this is the narrower candidate when the harmful unit is the current statement and the application can handle its failure. A <code>true</code> result means PostgreSQL successfully sent the signal. It does not mean the application request recovered, the transaction was cleaned up as intended, or service latency returned to normal.</p>
+      <p><code>pg_terminate_backend(pid, timeout)</code> ends the backend session. Termination has a larger blast radius because the connection and its transaction end. The timeout changes what a successful result confirms. With <code>timeout = 0</code>, PostgreSQL returns after successful signal delivery without waiting for the process to terminate. With a positive timeout, PostgreSQL waits for termination up to that interval; if the process is not terminated in time, the function returns <code>false</code> and emits a warning. The lab executor rejects non-positive values and defaults to 5,000 milliseconds so it cannot mistake signal delivery for confirmed termination.</p>
+      <p>Both functions are privilege constrained. A superuser can signal any backend. A role can signal its own backends, and members of <code>pg_signal_backend</code> can signal other non-superuser backends. Members of <code>pg_signal_backend</code> cannot signal a backend owned by a superuser; only another superuser can do that. Policy approval does not override PostgreSQL privileges, and PostgreSQL privilege does not replace application policy. Both checks must pass.</p>
+      <p>The decision rule is therefore narrow:</p>
+      <ul>
+        <li>Prefer no mutation when evidence is stale, incomplete, low-confidence, or no longer identifies the same root backend</li>
+        <li>Consider cancellation when one current query is the intended target, policy allows it, approval is valid when required, and fresh identity checks pass</li>
+        <li>Consider termination only in a disposable lab or under a separately approved production policy that accepts the session-level blast radius</li>
+        <li>Never allow bounded autonomous termination in this lab</li>
+      </ul>
+      <p>The deterministic tests verify statement selection and denial logic. Docker was unavailable on 2026-07-20, so no live PostgreSQL cancellation or termination was executed. There is no raw action artifact and no basis for claiming that either operation succeeded against PostgreSQL in this evaluation.</p>
+      <img src="visuals/v06-cancel-terminate-comparison.png" alt="PostgreSQL cancel-query and terminate-session scope comparison">
+      <p><em>Cancellation targets the current query; termination ends the session and remains outside this lab’s bounded-autonomy policy.</em></p>
+
+      <h2>Measure the agent against the same deterministic path</h2>
+      <p>An orchestration framework should not receive credit for work already performed by deterministic SQL and Python. Q8 therefore requires a same-evidence control, not a comparison with an intentionally weaker script. The control in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/baseline.py"><code>baseline.py</code></a> calls the same mode adapter with the same evidence and observation timestamp, without LangGraph. Its comparison helper normalizes only the intentionally unique <code>report_id</code> in the audit record.</p>
+      <p>The parametrized comparison in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_baseline.py"><code>test_baseline.py</code></a> runs all five fixture modes. For each mode, it invokes the LangGraph path and the deterministic control, compares every report field after that one normalization, and asserts that the graph report still has exactly eight fields. The result was 5-of-5 exact parity on 2026-07-20.</p>
+      <p>That experiment answers correctness only within five deterministic fixtures. A complete evaluation should also compare repeated live scenarios on root-source match, report completeness, elapsed time to a valid report, unauthorized action attempts, and workload impact. The opt-in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_live_postgres.py"><code>test_live_postgres.py</code></a> integration test is designed to create a two-hop blocking chain and compare the same two paths against PostgreSQL 18, but it is opt-in and was skipped because the Docker daemon was unavailable.</p>
+
+      <h3>Reproducible scorecard</h3>
+      <table>
+        <thead>
+          <tr><th>Dimension</th><th>Result on 2026-07-20</th><th>Evidence status</th><th>What may be concluded</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Deterministic suite</td><td>30 passed across <code>test_report.py</code>, <code>test_collector.py</code>, <code>test_workflow.py</code>, <code>test_baseline.py</code>, <code>test_authority.py</code>, and <code>test_actions.py</code>; 1 Docker-backed test skipped in <code>test_live_postgres.py</code></td><td>Measured locally; no raw live artifact</td><td>The fixture, contract, policy, and executor tests pass in process</td></tr>
+          <tr><td>Same-evidence correctness</td><td>5 of 5 fixture modes at exact report parity after normalizing only <code>report_id</code></td><td>Measured by local <code>test_baseline.py</code></td><td>LangGraph added zero diagnostic correctness in this fixture evaluation</td></tr>
+          <tr><td>Report contract</td><td>Both paths emitted the exact eight-field report in all 5 modes</td><td>Measured by local <code>test_baseline.py</code></td><td>Orchestration did not improve fixture completeness</td></tr>
+          <tr><td>Authority policy</td><td>7 tests passed</td><td>Measured by local <code>test_authority.py</code></td><td>The configured fail-closed predicates behave as asserted in process</td></tr>
+          <tr><td>Action executor</td><td>5 tests passed</td><td>Measured by local <code>test_actions.py</code></td><td>Fixed SQL, parameterization, positive timeout, and identity checks behave as asserted with fakes</td></tr>
+          <tr><td>Live cancel or terminate</td><td>No result</td><td>Blocked; no Docker daemon and no raw artifact</td><td>No live action claim is permitted</td></tr>
+          <tr><td>Elapsed-time comparison</td><td>No result</td><td>Blocked; no repeated live trials or raw artifact</td><td>No speed claim is permitted</td></tr>
+          <tr><td>Collection overhead</td><td>No result</td><td>Blocked; no <code>pgbench</code> latency, throughput, or raw logs</td><td>No workload-impact claim is permitted</td></tr>
+          <tr><td>Customer outcome</td><td>No result</td><td>No customer before/after case study selected</td><td>No customer impact claim is permitted</td></tr>
+          <tr><td>Production safety</td><td>No result</td><td>No production deployment or bypass analysis</td><td>No production safety guarantee is permitted</td></tr>
+        </tbody>
+      </table>
+      <p>I reproduced the full deterministic count in the local standalone clone with the exact suite boundaries documented in its public <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/README.md"><code>README.md</code></a>. The published deterministic suite is not a substitute for raw live artifacts. To complete the open cells, the lab needs a functioning disposable PostgreSQL 18 service, repeated trials, retained generated reports and action records, and <code>pgbench</code> runs lasting several minutes as recommended by the <a href="https://www.postgresql.org/docs/18/pgbench.html"><code>pgbench</code> documentation</a>.</p>
+      <img src="visuals/v07-reproducible-scorecard.png" alt="Reproducible scorecard separating measured fixture evidence from blocked live claims">
+      <p><em>Five exact fixture matches support a zero-gain result; live action, performance, customer, and production claims remain blocked.</em></p>
+
+      <h2>The honest verdict: prefer deterministic Python today</h2>
+      <p>Q15 asks what to conclude when the agent does not beat the baseline. Report the negative result without rescuing the original hypothesis. In this five-mode fixture evaluation, LangGraph added <strong>zero diagnostic correctness</strong>. Both paths used the same evidence, selected the same adapters, and produced the same eight fields in all five cases. For the current single-node diagnosis graph, deterministic Python is the simpler baseline. I would use it today.</p>
+      <p>This does not prove LangGraph has no value in a larger incident workflow. It identifies the point at which the framework would need to earn its complexity. Future requirements might include durable approval checkpoints, pause and resume, multiple human decisions, retry policy, or auditable workflow transitions. Those are orchestration problems. If they arrive, evaluate the framework against those requirements rather than retroactively calling exact diagnostic parity a win.</p>
+      <p>The controls that did earn their complexity are framework-independent: the eight-field report, typed requests, fixed action allowlist, five-second freshness policy, protected PIDs, root-target matching, approval IDs, positive termination timeouts, <code>backend_start</code> revalidation, and fail-closed tests. Keep those controls whether the surrounding workflow uses plain Python, LangGraph, or another orchestrator.</p>
+      <p>The conclusion must also preserve every abstention. This run produced no live cancel or terminate result, no elapsed-time comparison, no <code>pgbench</code> latency, throughput, or collection-overhead number, no customer before/after case study, and no production safety guarantee. Until raw artifacts exist, the evidence supports an in-process policy design and a negative fixture verdict. Nothing broader.</p>
+
+      <h2>Pre-action checklist</h2>
+      <p>Before one database-changing call, require all 10 checks:</p>
+      <ul>
+        <li>The diagnostic identity is read-only and cannot reach the action executor</li>
+        <li>The report is high-confidence and names one root source</li>
+        <li>The request contains one allowlisted action and one positive PID</li>
+        <li>The evidence age is within the configured threshold</li>
+        <li>The target PID is absent from the protected set</li>
+        <li>The requested PID matches the report’s diagnosed root</li>
+        <li>The approval ID is valid when the authority level requires approval</li>
+        <li>Bounded autonomy is attempting cancellation, never termination</li>
+        <li>The current <code>backend_start</code> exactly matches the expected value</li>
+        <li>The executor will return the PostgreSQL result; before production use, the deployment must persist it and trigger post-action evidence collection</li>
+      </ul>
+      <p>One failed or ambiguous check means deny. A policy that “usually” fails closed is not fail-closed.</p>
+
+      <h2>Build it yourself: three guarded-remediation projects</h2>
+
+      <h3>Project 1 - Prove diagnosis cannot mutate (Beginner)</h3>
+      <p><strong>Goal.</strong> Run the read-only diagnosis and make a test prove that no cancel or terminate node is reachable from the LangGraph.</p>
+      <p><strong>Prerequisites.</strong> Python 3.11 or later, <code>uv</code>, Git, and no PostgreSQL server.</p>
+      <p><strong>Steps.</strong></p>
+      <ol>
+        <li>Clone the public lab and run <code>uv sync --group dev</code>.</li>
+        <li>Run <code>uv run --group dev pytest tests/test_workflow.py tests/test_baseline.py</code>.</li>
+        <li>Inspect the graph-node assertion in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_workflow.py"><code>test_workflow.py</code></a>.</li>
+        <li>Add a temporary mutation node to your local graph and rerun the workflow test.</li>
+        <li>Remove the temporary node after the guard fails as designed.</li>
+      </ol>
+      <p><strong>Success signal.</strong> The unmodified tests pass, and the workflow test fails when the temporary mutation node makes the graph contain anything beyond <code>__start__</code>, <code>diagnose</code>, and <code>__end__</code>.</p>
+      <p><strong>Time.</strong> 45-60 minutes.</p>
+      <p><strong>Stretch goal.</strong> Add an assertion that the diagnostic connection factory can never construct <code>PostgreSQLActionExecutor</code>.</p>
+      <p><strong>Start from.</strong> Use the diagnosis graph and its guard in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/workflow.py"><code>workflow.py</code></a> and <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_workflow.py"><code>test_workflow.py</code></a>.</p>
+
+      <h3>Project 2 - Extend the fail-closed policy matrix (Intermediate)</h3>
+      <p><strong>Goal.</strong> Add one new denial predicate and prove that it blocks approval-gated and bounded-autonomous requests without touching PostgreSQL.</p>
+      <p><strong>Prerequisites.</strong> Project 1 complete and familiarity with Pydantic and pytest.</p>
+      <p><strong>Steps.</strong></p>
+      <ol>
+        <li>Read the predicate order in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/authority.py"><code>authority.py</code></a>.</li>
+        <li>Choose a bounded rule, such as an allowlist of permitted database users or a maximum number of affected requests supplied by trusted telemetry.</li>
+        <li>Add the typed policy field with <code>extra="forbid"</code> still enabled.</li>
+        <li>Add one passing case and at least two denial cases to <code>test_authority.py</code>.</li>
+        <li>Run <code>uv run --group dev pytest tests/test_authority.py</code>.</li>
+      </ol>
+      <p><strong>Success signal.</strong> The authority suite passes, and removing the new predicate causes both new denial tests to fail.</p>
+      <p><strong>Time.</strong> 2-3 hours.</p>
+      <p><strong>Stretch goal.</strong> Serialize every <code>PolicyDecision</code> to an append-only local audit file and test that denied decisions are recorded as well as allowed decisions.</p>
+      <p><strong>Start from.</strong> Extend <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/authority.py"><code>authority.py</code></a> and its seven-test boundary in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_authority.py"><code>test_authority.py</code></a>.</p>
+
+      <h3>Project 3 - Complete the live action and measurement harness (Advanced)</h3>
+      <p><strong>Goal.</strong> Produce the raw artifacts this draft lacks: live cancellation and termination results, repeated elapsed-time comparisons, and diagnostics-on versus diagnostics-off workload measurements in a disposable PostgreSQL 18 environment.</p>
+      <p><strong>Prerequisites.</strong> Projects 1-2 complete, Docker, PostgreSQL client tools, <code>pgbench</code>, and a weekend. Never point this project at production.</p>
+      <p><strong>Steps.</strong></p>
+      <ol>
+        <li>Start the temporary PostgreSQL 18 service from <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/compose.yaml"><code>compose.yaml</code></a>.</li>
+        <li>Extend <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_live_postgres.py"><code>test_live_postgres.py</code></a> with approval-gated cancellation and termination fixtures that assert the expected backend identity before and after each action.</li>
+        <li>Run repeated same-evidence baseline and LangGraph trials, recording fixture, timestamps, reports, action decisions, and execution results for every run.</li>
+        <li>Run several-minute <code>pgbench</code> trials with identical seed, scale, clients, and duration, first with diagnostic collection disabled and then enabled.</li>
+        <li>Retain per-transaction logs and publish a script that calculates latency, throughput, failure, and collection-overhead deltas from the raw files.</li>
+        <li>Rerun the full suite and document negative or null results without filtering them out.</li>
+      </ol>
+      <p><strong>Success signal.</strong> One command regenerates the raw action records, repeated baseline comparison, two <code>pgbench</code> log sets, and a machine-readable summary; the full test suite passes with the live test no longer skipped.</p>
+      <p><strong>Time.</strong> One weekend.</p>
+      <p><strong>Stretch goal.</strong> Add a durable approval checkpoint outside the diagnostic graph, then compare its transition and recovery behavior with a plain Python state machine before choosing an orchestrator.</p>
+      <p><strong>Start from.</strong> Build on <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/actions.py"><code>actions.py</code></a>, <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_actions.py"><code>test_actions.py</code></a>, and the opt-in <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/tests/test_live_postgres.py"><code>test_live_postgres.py</code></a>.</p>
+
+      <h2>Start with the guard that can fail</h2>
+      <div class="callout">
+        <p>I would build Project 1 first. Clone the <a href="https://github.com/sendtoshailesh/postgres-lock-agent-lab/blob/d600bdd/src/lock_agent/workflow.py"><code>postgres-lock-agent-lab</code> workflow</a>, run its diagnosis-only graph test, then add a temporary mutation node and watch the guard fail. That red test is the first useful result: it proves the boundary exists before you grant a PostgreSQL role permission to signal anything.</p>
+        <p><strong>Continue the series:</strong> <a href="/blog/postgresql-lock-agent-part-1.html">Read Part 1: Find the Root Blocker</a>.</p>
+      </div>
+    </div>
+  </article>
+</main>
+
+<footer class="blog-footer">
+  &copy; 2026 Shailesh Mishra
+</footer>
+</body>
+</html>
